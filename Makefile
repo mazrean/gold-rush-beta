@@ -1,4 +1,4 @@
-LOCAL_TAG = latest
+LOCAL_TAG = gold-rush:latest
 
 .PHONY: build
 build:
