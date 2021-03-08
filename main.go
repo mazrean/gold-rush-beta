@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"sync"
@@ -91,7 +92,12 @@ func main() {
 
 func licenses(req []int32) func(context.Context) {
 	return func(ctx context.Context) {
-		licenses, res, _ := api.IssueLicense(ctx).Args(req).Execute()
+		licenses, res, err := api.IssueLicense(ctx).Args(req).Execute()
+		if err != nil {
+			fmt.Println("license error:", err)
+			return
+		}
+
 		if res.StatusCode != 200 {
 			return
 		}
@@ -104,7 +110,11 @@ func licenses(req []int32) func(context.Context) {
 
 func explore(req *openapi.Area) func(context.Context) {
 	return func(ctx context.Context) {
-		report, res, _ := api.ExploreArea(ctx).Args(*req).Execute()
+		report, res, err := api.ExploreArea(ctx).Args(*req).Execute()
+		if err != nil {
+			fmt.Println("explore error:", err)
+			return
+		}
 		calcChan <- func(ctx context.Context) {
 			if res.StatusCode != 200 || report.Amount == 0 {
 				return
@@ -169,7 +179,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 	if isLicenseQueued {
 		digQueue <- func(ctx context.Context) {
 			req.LicenseID = license.Id
-			treasures, res, _ := api.Dig(ctx).Args(*req).Execute()
+			treasures, res, err := api.Dig(ctx).Args(*req).Execute()
+			if err != nil {
+				fmt.Println("dig error:", err)
+				return
+			}
 
 			calcChan <- func(ctx context.Context) {
 				if res.StatusCode != 200 {
@@ -217,7 +231,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		requestChan <- licenses(reqCoins)
 		digQueue <- func(ctx context.Context) {
 			req.LicenseID = license.Id
-			treasures, res, _ := api.Dig(ctx).Args(*req).Execute()
+			treasures, res, err := api.Dig(ctx).Args(*req).Execute()
+			if err != nil {
+				fmt.Println("dig error:", err)
+				return
+			}
 
 			calcChan <- func(ctx context.Context) {
 				if res.StatusCode != 200 {
@@ -242,7 +260,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 	licenseLocker.RUnlock()
 
 	return func(ctx context.Context) {
-		treasures, res, _ := api.Dig(ctx).Args(*req).Execute()
+		treasures, res, err := api.Dig(ctx).Args(*req).Execute()
+		if err != nil {
+			fmt.Println("dig error:", err)
+			return
+		}
 
 		calcChan <- func(ctx context.Context) {
 			if res.StatusCode != 200 {
@@ -262,7 +284,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 
 func cache(req string) func(context.Context) {
 	return func(ctx context.Context) {
-		newCoins, res, _ := api.Cash(ctx).Args(req).Execute()
+		newCoins, res, err := api.Cash(ctx).Args(req).Execute()
+		if err != nil {
+			fmt.Println("cache error:", err)
+			return
+		}
 		if res.StatusCode != 200 {
 			return
 		}
