@@ -17,7 +17,7 @@ const (
 	RequestChanLen    = 10
 	CalcChanLen       = 10
 	Area              = 3500
-	ExploreArea       = 100
+	ExploreArea       = 10
 )
 
 var (
