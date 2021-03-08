@@ -24,8 +24,8 @@ var (
 	startTime time.Time
 
 	client = openapi.NewAPIClient(&openapi.Configuration{
-		Host:       os.Getenv("ADDRESS") + ":" + os.Getenv("Port"),
-		Scheme:     os.Getenv("Schema"),
+		Host:       os.Getenv("ADDRESS") + ":8000",
+		Scheme:     "http",
 		HTTPClient: http.DefaultClient,
 	})
 	api = client.DefaultApi
