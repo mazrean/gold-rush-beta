@@ -1,9 +1,8 @@
 LOCAL_TAG = latest
-DOCKER_FILE = Dockerfile
 
 .PHONY: build
 build:
-	docker build -t $(LOCAL_TAG) $(DOCKER_FILE)
+	docker build -t $(LOCAL_TAG) .
 
 .PHONY: generate
 generate:
