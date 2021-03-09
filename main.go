@@ -17,15 +17,18 @@ const (
 	RequestChanLen    = 10
 	CalcChanLen       = 10
 	Area              = 3500
-	ExploreArea       = 10
+	ExploreArea       = 1
 )
 
 var (
 	startTime time.Time
 
 	client = openapi.NewAPIClient(&openapi.Configuration{
-		Host:       os.Getenv("ADDRESS") + ":8000",
-		Scheme:     "http",
+		Servers: openapi.ServerConfigurations{
+			{
+				URL: fmt.Sprintf("http://%s:8000", os.Getenv("ADDRESS")),
+			},
+		},
 		HTTPClient: http.DefaultClient,
 		Debug:      true,
 	})
