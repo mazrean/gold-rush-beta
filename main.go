@@ -36,7 +36,7 @@ var (
 	})
 	api = client.DefaultApi
 
-	digQueue = make(chan func(context.Context), 20)
+	digQueue = make(chan func(licenseID int32) func(context.Context), 20)
 
 	licenseLocker                  = sync.RWMutex{}
 	license       *openapi.License = nil
@@ -126,6 +126,7 @@ func licenses(req []int32) func(context.Context) {
 
 				continue
 			}
+			fmt.Println("license request succeeded")
 			break
 		}
 
@@ -135,17 +136,22 @@ func licenses(req []int32) func(context.Context) {
 
 		licenseLocker.Lock()
 		license = &licenseVal
-		license.DigUsed = int32(len(digQueue))
+		var digNum int32
+		if len(digQueue) <= int(license.DigAllowed) {
+			license.DigUsed = int32(len(digQueue))
+			digNum = int32(len(digQueue))
+		} else {
+			license.DigUsed = licenseVal.DigAllowed
+			digNum = licenseVal.DigAllowed
+		}
 		licenseLocker.Unlock()
 
 		isLicenseQueuedLocker.Lock()
 		isLicenseQueued = false
 		isLicenseQueuedLocker.Unlock()
 
-		calcChan <- func(ctx context.Context) {
-			for digFunc := range digQueue {
-				digChan <- digFunc
-			}
+		for i := 0; i < int(digNum); i++ {
+			digChan <- (<-digQueue)(license.Id)
 		}
 	}
 }
@@ -219,29 +225,31 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 	newIsLicenseQueued := isLicenseQueued
 	isLicenseQueuedLocker.RUnlock()
 	if newIsLicenseQueued {
-		digQueue <- func(ctx context.Context) {
-			req.LicenseID = license.Id
-			treasures, res, err := api.Dig(ctx).Args(*req).Execute()
-			if err != nil {
-				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
-				ok := errors.As(err, &apiErr)
-				if ok {
-					fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+		digQueue <- func(licenseID int32) func(context.Context) {
+			return func(ctx context.Context) {
+				req.LicenseID = licenseID
+				treasures, res, err := api.Dig(ctx).Args(*req).Execute()
+				if err != nil {
+					var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+					ok := errors.As(err, &apiErr)
+					if ok {
+						fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+					}
+					fmt.Println("dig error:", err)
+					return
 				}
-				fmt.Println("dig error:", err)
-				return
-			}
 
-			if res.StatusCode != 200 {
-				return
-			}
+				if res.StatusCode != 200 {
+					return
+				}
 
-			for _, treasure := range treasures {
-				cacheChan <- cache(treasure)
-			}
+				for _, treasure := range treasures {
+					cacheChan <- cache(treasure)
+				}
 
-			if len(treasures) < amount {
-				digChan <- dig(req, amount-len(treasures))
+				if len(treasures) < amount {
+					digChan <- dig(req, amount-len(treasures))
+				}
 			}
 		}
 
@@ -274,30 +282,32 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		isLicenseQueuedLocker.Unlock()
 
 		licenseChan <- licenses(reqCoins)
-		digQueue <- func(ctx context.Context) {
-			req.LicenseID = license.Id
-			treasures, res, err := api.Dig(ctx).Args(*req).Execute()
-			if err != nil {
-				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
-				ok := errors.As(err, &apiErr)
-				if ok {
-					fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
-				}
-				fmt.Println("dig error:", err)
-				return
-			}
-
-			calcChan <- func(ctx context.Context) {
-				if res.StatusCode != 200 {
+		digQueue <- func(licenseID int32) func(ctx context.Context) {
+			return func(ctx context.Context) {
+				req.LicenseID = license.Id
+				treasures, res, err := api.Dig(ctx).Args(*req).Execute()
+				if err != nil {
+					var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+					ok := errors.As(err, &apiErr)
+					if ok {
+						fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+					}
+					fmt.Println("dig error:", err)
 					return
 				}
 
-				for _, treasure := range treasures {
-					cacheChan <- cache(treasure)
-				}
+				calcChan <- func(ctx context.Context) {
+					if res.StatusCode != 200 {
+						return
+					}
 
-				if len(treasures) < amount {
-					digChan <- dig(req, amount-len(treasures))
+					for _, treasure := range treasures {
+						cacheChan <- cache(treasure)
+					}
+
+					if len(treasures) < amount {
+						digChan <- dig(req, amount-len(treasures))
+					}
 				}
 			}
 		}
