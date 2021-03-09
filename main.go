@@ -13,7 +13,7 @@ import (
 
 const (
 	RequestRoutineNum = 3
-	CalcRoutineNum    = 4
+	CalcRoutineNum    = 2
 	RequestChanLen    = 10
 	CalcChanLen       = 10
 	Area              = 3500
@@ -47,7 +47,10 @@ var (
 
 	coinUses = [10]int{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
-	requestChan = make(chan func(context.Context), RequestChanLen)
+	cacheChan   = make(chan func(context.Context), RequestChanLen)
+	licenseChan = make(chan func(context.Context), RequestChanLen)
+	digChan     = make(chan func(context.Context), RequestChanLen)
+	exploreChan = make(chan func(context.Context), RequestChanLen)
 	calcChan    = make(chan func(context.Context), CalcChanLen)
 )
 
@@ -62,7 +65,14 @@ func main() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for requestFunc := range requestChan {
+			for {
+				var requestFunc func(context.Context)
+				select {
+				case requestFunc = <-cacheChan:
+				case requestFunc = <-licenseChan:
+				case requestFunc = <-digChan:
+				case requestFunc = <-exploreChan:
+				}
 				requestFunc(ctx)
 			}
 		}()
@@ -82,7 +92,7 @@ func main() {
 	var sizeY int32 = ExploreArea
 	for i := 0; i < Area; i += ExploreArea {
 		for j := 0; j < Area; j += ExploreArea {
-			requestChan <- explore(&openapi.Area{
+			exploreChan <- explore(&openapi.Area{
 				PosX:  int32(i),
 				PosY:  int32(j),
 				SizeX: &sizeX,
@@ -127,7 +137,7 @@ func explore(req *openapi.Area) func(context.Context) {
 			if report.Area.GetSizeX() != 1 || report.Area.GetSizeY() != 1 {
 				sizeX := (req.GetSizeX() + 1) / 2
 				sizeY := (req.GetPosY() + 1) / 2
-				requestChan <- explore(&openapi.Area{
+				exploreChan <- explore(&openapi.Area{
 					PosX:  req.PosX,
 					PosY:  req.PosY,
 					SizeX: &sizeX,
@@ -136,7 +146,7 @@ func explore(req *openapi.Area) func(context.Context) {
 
 				lessSizeX := req.GetSizeX() - sizeX
 				if lessSizeX != 0 {
-					requestChan <- explore(&openapi.Area{
+					exploreChan <- explore(&openapi.Area{
 						PosX:  req.PosX + sizeX,
 						PosY:  req.PosY,
 						SizeX: &lessSizeX,
@@ -146,7 +156,7 @@ func explore(req *openapi.Area) func(context.Context) {
 
 				lessSizeY := req.GetSizeY() - sizeY
 				if lessSizeY != 0 {
-					requestChan <- explore(&openapi.Area{
+					exploreChan <- explore(&openapi.Area{
 						PosX:  req.PosX,
 						PosY:  req.PosY + sizeY,
 						SizeX: &sizeX,
@@ -155,7 +165,7 @@ func explore(req *openapi.Area) func(context.Context) {
 				}
 
 				if lessSizeX != 0 && lessSizeY != 0 {
-					requestChan <- explore(&openapi.Area{
+					exploreChan <- explore(&openapi.Area{
 						PosX:  req.PosX + sizeX,
 						PosY:  req.PosY + sizeY,
 						SizeX: &lessSizeX,
@@ -169,7 +179,7 @@ func explore(req *openapi.Area) func(context.Context) {
 					Depth: 1,
 				}, int(report.Amount))
 				if digFunc != nil {
-					requestChan <- digFunc
+					digChan <- digFunc
 				}
 			}
 		}
@@ -195,11 +205,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				}
 
 				for _, treasure := range treasures {
-					requestChan <- cache(treasure)
+					cacheChan <- cache(treasure)
 				}
 
 				if len(treasures) < amount {
-					requestChan <- dig(req, amount-len(treasures))
+					digChan <- dig(req, amount-len(treasures))
 				}
 			}
 		}
@@ -232,7 +242,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		isLicenseQueued = true
 		isLicenseQueuedLocker.Unlock()
 
-		requestChan <- licenses(reqCoins)
+		licenseChan <- licenses(reqCoins)
 		digQueue <- func(ctx context.Context) {
 			req.LicenseID = license.Id
 			treasures, res, err := api.Dig(ctx).Args(*req).Execute()
@@ -247,11 +257,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				}
 
 				for _, treasure := range treasures {
-					requestChan <- cache(treasure)
+					cacheChan <- cache(treasure)
 				}
 
 				if len(treasures) < amount {
-					requestChan <- dig(req, amount-len(treasures))
+					digChan <- dig(req, amount-len(treasures))
 				}
 			}
 		}
@@ -276,11 +286,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 			}
 
 			for _, treasure := range treasures {
-				requestChan <- cache(treasure)
+				cacheChan <- cache(treasure)
 			}
 
 			if len(treasures) < amount {
-				requestChan <- dig(req, amount-len(treasures))
+				digChan <- dig(req, amount-len(treasures))
 			}
 		}
 	}
