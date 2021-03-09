@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/openapi"
@@ -110,18 +111,22 @@ func main() {
 
 func licenses(req []int32) func(context.Context) {
 	return func(ctx context.Context) {
-		licenseVal, res, err := api.IssueLicense(ctx).Args(req).Execute()
-		if err != nil {
-			var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
-			ok := errors.As(err, &apiErr)
-			if ok {
-				fmt.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+		var licenseVal openapi.License
+		var res *http.Response
+		var err error
+		for {
+			licenseVal, res, err = api.IssueLicense(ctx).Args(req).Execute()
+			if err != nil {
+				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+				ok := errors.As(err, &apiErr)
+				if ok {
+					fmt.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+				}
+				fmt.Println("license error:", err)
+
+				continue
 			}
-			fmt.Println("license error:", err)
-
-			licenseChan <- licenses(req)
-
-			return
+			break
 		}
 
 		if res.StatusCode != 200 {
@@ -227,19 +232,16 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				return
 			}
 
-			calcChan <- func(ctx context.Context) {
-				if res.StatusCode != 200 {
-					return
-				}
+			if res.StatusCode != 200 {
+				return
+			}
 
-				for _, treasure := range treasures {
-					cacheChan <- cache(treasure)
-				}
+			for _, treasure := range treasures {
+				cacheChan <- cache(treasure)
+			}
 
-				if len(treasures) < amount {
-					req.Depth++
-					digChan <- dig(req, amount-len(treasures))
-				}
+			if len(treasures) < amount {
+				digChan <- dig(req, amount-len(treasures))
 			}
 		}
 
@@ -305,6 +307,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 
 	licenseLocker.RLock()
 	req.LicenseID = license.Id
+	atomic.AddInt32(&license.DigUsed, 1)
 	licenseLocker.RUnlock()
 
 	return func(ctx context.Context) {
