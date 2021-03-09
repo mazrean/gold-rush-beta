@@ -110,7 +110,7 @@ func main() {
 
 func licenses(req []int32) func(context.Context) {
 	return func(ctx context.Context) {
-		licenses, res, err := api.IssueLicense(ctx).Args(req).Execute()
+		licenseVal, res, err := api.IssueLicense(ctx).Args(req).Execute()
 		if err != nil {
 			var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 			ok := errors.As(err, &apiErr)
@@ -118,6 +118,9 @@ func licenses(req []int32) func(context.Context) {
 				fmt.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 			}
 			fmt.Println("license error:", err)
+
+			licenseChan <- licenses(req)
+
 			return
 		}
 
@@ -126,7 +129,7 @@ func licenses(req []int32) func(context.Context) {
 		}
 
 		licenseLocker.Lock()
-		license = &licenses
+		license = &licenseVal
 		license.DigUsed = int32(len(digQueue))
 		licenseLocker.Unlock()
 
