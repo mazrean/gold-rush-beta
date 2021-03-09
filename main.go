@@ -60,22 +60,22 @@ func main() {
 
 	for i := 0; i < RequestRoutineNum; i++ {
 		wg.Add(1)
-		go func(ctx context.Context) {
+		go func() {
 			defer wg.Done()
 			for requestFunc := range requestChan {
 				requestFunc(ctx)
 			}
-		}(ctx)
+		}()
 	}
 
 	for i := 0; i < CalcRoutineNum; i++ {
 		wg.Add(1)
-		go func(ctx context.Context) {
+		go func() {
 			defer wg.Done()
 			for calcFunc := range calcChan {
 				calcFunc(ctx)
 			}
-		}(ctx)
+		}()
 	}
 
 	var sizeX int32 = ExploreArea
