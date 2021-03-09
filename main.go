@@ -76,7 +76,6 @@ func main() {
 				case requestFunc = <-licenseChan:
 					fmt.Println("license")
 				case requestFunc = <-exploreChan:
-					fmt.Println("explore")
 				}
 				requestFunc(ctx)
 			}
