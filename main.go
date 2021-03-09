@@ -30,7 +30,7 @@ var (
 			},
 		},
 		HTTPClient: http.DefaultClient,
-		Debug:      true,
+		Debug:      false,
 	})
 	api = client.DefaultApi
 
@@ -69,9 +69,13 @@ func main() {
 				var requestFunc func(context.Context)
 				select {
 				case requestFunc = <-cacheChan:
+					fmt.Println("cache")
 				case requestFunc = <-licenseChan:
+					fmt.Println("license")
 				case requestFunc = <-digChan:
+					fmt.Println("dig")
 				case requestFunc = <-exploreChan:
+					fmt.Println("explore")
 				}
 				requestFunc(ctx)
 			}
@@ -119,6 +123,12 @@ func licenses(req []int32) func(context.Context) {
 		licenseLocker.Lock()
 		license = &licenses
 		licenseLocker.Unlock()
+
+		calcChan <- func(ctx context.Context) {
+			for digFunc := range digQueue {
+				digChan <- digFunc
+			}
+		}
 	}
 }
 
@@ -209,6 +219,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				}
 
 				if len(treasures) < amount {
+					req.Depth++
 					digChan <- dig(req, amount-len(treasures))
 				}
 			}
