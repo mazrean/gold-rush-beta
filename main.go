@@ -51,9 +51,6 @@ var (
 func main() {
 	startTime = time.Now()
 
-	fmt.Println(client.GetConfig().Host)
-	fmt.Println(client.GetConfig().Scheme)
-
 	ctx := context.Background()
 
 	wg := sync.WaitGroup{}
