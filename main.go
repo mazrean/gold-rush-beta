@@ -350,6 +350,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 
 func cache(req string) func(context.Context) {
 	return func(ctx context.Context) {
+		fmt.Println(req)
 		newCoins, res, err := api.Cash(ctx).Args(req).Execute()
 		if err != nil {
 			var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
