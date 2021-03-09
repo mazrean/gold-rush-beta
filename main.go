@@ -27,6 +27,7 @@ var (
 		Host:       os.Getenv("ADDRESS") + ":8000",
 		Scheme:     "http",
 		HTTPClient: http.DefaultClient,
+		Debug:      true,
 	})
 	api = client.DefaultApi
 
