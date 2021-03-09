@@ -112,6 +112,11 @@ func licenses(req []int32) func(context.Context) {
 	return func(ctx context.Context) {
 		licenses, res, err := api.IssueLicense(ctx).Args(req).Execute()
 		if err != nil {
+			var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+			ok := errors.As(err, &apiErr)
+			if ok {
+				fmt.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+			}
 			fmt.Println("license error:", err)
 			return
 		}
