@@ -352,6 +352,11 @@ func cache(req string) func(context.Context) {
 	return func(ctx context.Context) {
 		newCoins, res, err := api.Cash(ctx).Args(req).Execute()
 		if err != nil {
+			var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+			ok := errors.As(err, &apiErr)
+			if ok {
+				fmt.Printf("cache error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+			}
 			fmt.Println("cache error:", err)
 			return
 		}
