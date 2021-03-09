@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -205,6 +207,16 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 			req.LicenseID = license.Id
 			treasures, res, err := api.Dig(ctx).Args(*req).Execute()
 			if err != nil {
+				var apiErr openapi.GenericOpenAPIError
+				ok := errors.As(err, &apiErr)
+				if ok {
+					var errBody openapi.ModelError
+					err := json.Unmarshal(apiErr.Body(), &errBody)
+					if err == nil {
+						fmt.Printf("dig error(%s):%+v", apiErr.Error(), errBody)
+						return
+					}
+				}
 				fmt.Println("dig error:", err)
 				return
 			}
