@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/openapi"
@@ -409,11 +408,10 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		return nil
 	}
 
-	licenseLocker.RLock()
-	req.LicenseID = licenseList[0].Id
-	licenseLocker.RUnlock()
-	atomic.AddInt32(&licenseList[0].DigUsed, 1)
 	licenseLocker.Lock()
+	req.LicenseID = licenseList[0].Id
+	remain--
+	licenseList[0].DigUsed++
 	if licenseList[0].DigUsed == licenseList[0].DigAllowed {
 		licenseList = licenseList[1:]
 	}
