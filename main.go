@@ -130,8 +130,9 @@ func licenses(req []int32) func(context.Context) {
 				ok := errors.As(err, &apiErr)
 				if ok {
 					fmt.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+				} else {
+					fmt.Println("license error:", err)
 				}
-				fmt.Println("license error:", err)
 
 				continue
 			}
