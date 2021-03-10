@@ -49,7 +49,6 @@ var (
 	coins       = []int32{}
 
 	coinUses = [10]int{10, 9, 8, 7, 6, 2, 2, 2, 2, 0}
-	digDepth = [10]int32{10, 5, 5, 5, 5, 5, 4, 3, 2, 1}
 
 	cacheChan   = make(chan func(context.Context), RequestChanLen)
 	licenseChan = make(chan func(context.Context), RequestChanLen)
@@ -217,11 +216,10 @@ func explore(req *openapi.Area) func(context.Context) {
 					})
 				}
 			} else {
-				fmt.Printf("dig depth index:%d\n", int(time.Since(startTime).Minutes()))
 				digFunc := dig(&openapi.Dig{
 					PosX:  req.PosX,
 					PosY:  req.PosY,
-					Depth: digDepth[int(time.Since(startTime).Minutes())],
+					Depth: 1,
 				}, int(report.Amount))
 				if digFunc != nil {
 					digChan <- digFunc
