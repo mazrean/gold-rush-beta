@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	RequestRoutineNum = 2
+	RequestRoutineNum = 3
 	CalcRoutineNum    = 2
 	RequestChanLen    = 10
 	CalcChanLen       = 10
@@ -48,7 +48,7 @@ var (
 	coinsLocker = sync.RWMutex{}
 	coins       = []int32{}
 
-	coinUses = [10]int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	coinUses = [10]int{5, 4, 3, 2, 1, 1, 1, 0, 0, 0}
 
 	cacheChan   = make(chan func(context.Context), RequestChanLen)
 	licenseChan = make(chan func(context.Context), RequestChanLen)
