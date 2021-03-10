@@ -158,9 +158,10 @@ func licenses(req []int32) func(context.Context) {
 
 		licenseLocker.Lock()
 		var digNum int32
-		if len(digQueue) < int(licenseVal.DigAllowed) {
-			licenseVal.DigUsed = int32(len(digQueue))
-			digNum = int32(len(digQueue))
+		queueLen := len(digQueue)
+		if queueLen < int(licenseVal.DigAllowed) {
+			licenseVal.DigUsed = int32(queueLen)
+			digNum = int32(queueLen)
 			licenseList = append(licenseList, &licenseVal)
 		} else {
 			licenseVal.DigUsed = licenseVal.DigAllowed
@@ -499,7 +500,7 @@ func cache(req string) func(context.Context) {
 				fmt.Println("cache error:", err)
 				continue
 			}
-			fmt.Printf("cash request succeeded(%s):%d\n", req, len(newCoins))
+			//fmt.Printf("cash request succeeded(%s):%d\n", req, len(newCoins))
 			break
 		}
 		if res != nil && res.StatusCode != 200 {
