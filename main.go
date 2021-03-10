@@ -352,15 +352,21 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 func cache(req string) func(context.Context) {
 	req = fmt.Sprintf(`"%s"`, req)
 	return func(ctx context.Context) {
-		newCoins, res, err := api.Cash(ctx).Args(req).Execute()
-		if err != nil {
-			var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
-			ok := errors.As(err, &apiErr)
-			if ok {
-				fmt.Printf("cache error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+		var newCoins []int32
+		var res *http.Response
+		var err error
+		for {
+			newCoins, res, err = api.Cash(ctx).Args(req).Execute()
+			if err != nil {
+				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+				ok := errors.As(err, &apiErr)
+				if ok {
+					fmt.Printf("cache error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+				}
+				fmt.Println("cache error:", err)
+				continue
 			}
-			fmt.Println("cache error:", err)
-			return
+			break
 		}
 		if res.StatusCode != 200 {
 			return
