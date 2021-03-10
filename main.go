@@ -238,6 +238,8 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					requestTime := time.Since(startTime).Milliseconds()
 					if res.StatusCode == 404 {
 						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
+						req.Depth++
+						digChan <- dig(req, amount)
 						return
 					}
 					if err != nil {
@@ -309,6 +311,8 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					requestTime := time.Since(startTime).Milliseconds()
 					if res.StatusCode == 404 {
 						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
+						req.Depth++
+						digChan <- dig(req, amount)
 						return
 					}
 					if err != nil {
@@ -360,6 +364,8 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 			requestTime := time.Since(startTime).Milliseconds()
 			if res.StatusCode == 404 {
 				fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
+				req.Depth++
+				digChan <- dig(req, amount)
 				return
 			}
 			if err != nil {
