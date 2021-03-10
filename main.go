@@ -248,7 +248,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
 						calcChan <- func(ctx context.Context) {
-							fmt.Println("set next dig")
+							//fmt.Println("set next dig")
 							req.Depth++
 							digFunc := dig(req, amount)
 							if digFunc != nil {
@@ -261,7 +261,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						fmt.Printf("dig invalid license(request: %+v)\n", req)
 
 						calcChan <- func(ctx context.Context) {
-							fmt.Println("set next dig")
+							//fmt.Println("set next dig")
 							req.Depth++
 							digFunc := dig(req, amount)
 							if digFunc != nil {
@@ -344,7 +344,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
 						calcChan <- func(ctx context.Context) {
-							fmt.Println("set next dig")
+							//fmt.Println("set next dig")
 							req.Depth++
 							digFunc := dig(req, amount)
 							if digFunc != nil {
@@ -357,7 +357,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						fmt.Printf("dig invalid license(request: %+v)\n", req)
 
 						calcChan <- func(ctx context.Context) {
-							fmt.Println("set next dig")
+							//fmt.Println("set next dig")
 							req.Depth++
 							digFunc := dig(req, amount)
 							if digFunc != nil {
@@ -419,7 +419,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
 				calcChan <- func(ctx context.Context) {
-					fmt.Println("set next dig")
+					//fmt.Println("set next dig")
 					req.Depth++
 					digFunc := dig(req, amount)
 					if digFunc != nil {
@@ -432,7 +432,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				fmt.Printf("dig invalid license(request: %+v)\n", req)
 
 				calcChan <- func(ctx context.Context) {
-					fmt.Println("set next dig")
+					//fmt.Println("set next dig")
 					req.Depth++
 					digFunc := dig(req, amount)
 					if digFunc != nil {
