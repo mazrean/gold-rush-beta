@@ -71,14 +71,20 @@ func main() {
 			defer wg.Done()
 			for {
 				var requestFunc func(context.Context)
+				var state string
 				select {
 				case requestFunc = <-cacheChan:
-					//fmt.Println("cache")
+					state = "cache"
 				case requestFunc = <-digChan:
-					//fmt.Println("dig")
+					state = "dig"
 				case requestFunc = <-licenseChan:
-					//fmt.Println("license")
+					state = "license"
 				case requestFunc = <-exploreChan:
+					state = "explore"
+				}
+				if requestFunc == nil {
+					fmt.Printf("nil func(state:%s)", state)
+					continue
 				}
 				fmt.Printf("request func start(routine: %d):%+v\n", i, time.Now())
 				requestFunc(ctx)
