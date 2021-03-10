@@ -125,7 +125,7 @@ func licenses(req []int32) func(context.Context) {
 		for {
 			licenseVal, res, err = api.IssueLicense(ctx).Args(req).Execute()
 			if err != nil {
-				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+				var apiErr openapi.GenericOpenAPIError
 				ok := errors.As(err, &apiErr)
 				if ok {
 					fmt.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
@@ -160,7 +160,7 @@ func licenses(req []int32) func(context.Context) {
 		isLicenseQueuedLocker.Unlock()
 
 		for i := 0; i < int(digNum); i++ {
-			digChan <- (<-digQueue)(license.Id)
+			digChan <- (<-digQueue)(licenseVal.Id)
 		}
 	}
 }
@@ -270,7 +270,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						return
 					}
 					if err != nil {
-						var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+						var apiErr openapi.GenericOpenAPIError
 						ok := errors.As(err, &apiErr)
 						if ok {
 							fmt.Printf("dig error(request: %+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
@@ -366,7 +366,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						return
 					}
 					if err != nil {
-						var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+						var apiErr openapi.GenericOpenAPIError
 						ok := errors.As(err, &apiErr)
 						if ok {
 							fmt.Printf("dig error:%+v\n", apiErr.Model().(openapi.ModelError))
@@ -440,7 +440,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				return
 			}
 			if err != nil {
-				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+				var apiErr openapi.GenericOpenAPIError
 				ok := errors.As(err, &apiErr)
 				if ok {
 					fmt.Printf("dig error(request: %+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
@@ -480,7 +480,7 @@ func cache(req string) func(context.Context) {
 		for {
 			newCoins, res, err = api.Cash(ctx).Args(req).Execute()
 			if err != nil {
-				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+				var apiErr openapi.GenericOpenAPIError
 				ok := errors.As(err, &apiErr)
 				if ok {
 					fmt.Printf("cache error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
