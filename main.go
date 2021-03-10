@@ -38,8 +38,9 @@ var (
 
 	digQueue = make(chan func(licenseID int32) func(context.Context), 20)
 
-	licenseLocker                  = sync.RWMutex{}
-	license       *openapi.License = nil
+	licenseLocker                    = sync.RWMutex{}
+	licenseList   []*openapi.License = []*openapi.License{}
+	remain                           = 0
 
 	isLicenseQueuedLocker = sync.RWMutex{}
 	isLicenseQueued       = false
@@ -157,15 +158,16 @@ func licenses(req []int32) func(context.Context) {
 		}
 
 		licenseLocker.Lock()
-		license = &licenseVal
 		var digNum int32
-		if len(digQueue) <= int(licenseVal.DigAllowed) {
-			license.DigUsed = int32(len(digQueue))
+		if len(digQueue) < int(licenseVal.DigAllowed) {
+			licenseVal.DigUsed = int32(len(digQueue))
 			digNum = int32(len(digQueue))
+			licenseList = append(licenseList, &licenseVal)
 		} else {
-			license.DigUsed = licenseVal.DigAllowed
+			licenseVal.DigUsed = licenseVal.DigAllowed
 			digNum = licenseVal.DigAllowed
 		}
+		remain += int(licenseVal.DigAllowed) - int(digNum)
 		licenseLocker.Unlock()
 
 		isLicenseQueuedLocker.Lock()
@@ -316,13 +318,6 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		return nil
 	}
 
-	licenseLocker.RLock()
-	var remain int32 = 0
-	if license != nil {
-		remain = license.DigAllowed - license.DigUsed
-	}
-	licenseLocker.RUnlock()
-
 	if remain < 1 {
 		//fmt.Printf("coin use index:%d\n", int(time.Since(startTime).Minutes()))
 		reqCoinLen := coinUses[int(time.Since(startTime).Minutes())]
@@ -345,7 +340,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		licenseChan <- licenses(reqCoins)
 		digQueue <- func(licenseID int32) func(ctx context.Context) {
 			return func(ctx context.Context) {
-				req.LicenseID = license.Id
+				req.LicenseID = licenseID
 				var treasures []string
 				var res *http.Response
 				var err error
@@ -415,9 +410,14 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 	}
 
 	licenseLocker.RLock()
-	req.LicenseID = license.Id
-	atomic.AddInt32(&license.DigUsed, 1)
+	req.LicenseID = licenseList[0].Id
 	licenseLocker.RUnlock()
+	atomic.AddInt32(&licenseList[0].DigUsed, 1)
+	licenseLocker.Lock()
+	if licenseList[0].DigUsed == licenseList[0].DigAllowed {
+		licenseList = licenseList[1:]
+	}
+	licenseLocker.Unlock()
 
 	return func(ctx context.Context) {
 		var treasures []string
