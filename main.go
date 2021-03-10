@@ -155,6 +155,7 @@ func insertDig(arg *scheduler.Point) {
 	digQueueCheckLocker.Lock()
 	if isDigQueued {
 		digQueue <- arg
+		digQueueCheckLocker.Unlock()
 	}
 
 	licenseID, err := api.PreserveLicense()
