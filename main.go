@@ -32,7 +32,7 @@ var (
 			},
 		},
 		HTTPClient: http.DefaultClient,
-		Debug:      true,
+		Debug:      false,
 	})
 	api = client.DefaultApi
 
