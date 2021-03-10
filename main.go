@@ -261,7 +261,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
 					requestTime := time.Since(startTime).Milliseconds()
 					if res != nil && res.StatusCode == 404 {
-						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
+						fmt.Printf("dig not found(request:%+v): {requestTime: %d}\n", req.Depth, requestTime)
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
@@ -350,7 +350,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
 					requestTime := time.Since(startTime).Milliseconds()
 					if res != nil && res.StatusCode == 404 {
-						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
+						fmt.Printf("dig not found(request:%+v): {requestTime: %d}\n", req.Depth, requestTime)
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
@@ -428,7 +428,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 			treasures, res, err = api.Dig(ctx).Args(*req).Execute()
 			requestTime := time.Since(startTime).Milliseconds()
 			if res != nil && res.StatusCode == 404 {
-				fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
+				fmt.Printf("dig not found(request:%+v): {requestTime: %d}\n", req.Depth, requestTime)
 
 				calcChan <- func(ctx context.Context) {
 					//fmt.Println("set next dig")
