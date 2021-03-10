@@ -3,8 +3,8 @@ package scheduler
 type Point struct {
 	X      int32
 	Y      int32
-	Depth  int
-	Amount int
+	Depth  int32
+	Amount int32
 }
 
 func (p *Point) priority() float64 {
