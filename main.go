@@ -127,7 +127,7 @@ func licenses(req []int32) func(context.Context) {
 
 				continue
 			}
-			fmt.Println("license request succeeded")
+			fmt.Printf("license request succeeded(%d):%+v\n", len(req), licenseVal)
 			break
 		}
 
