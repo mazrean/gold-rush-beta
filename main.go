@@ -254,7 +254,23 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						calcChan <- func(ctx context.Context) {
 							fmt.Println("set next dig")
 							req.Depth++
-							digChan <- dig(req, amount)
+							digFunc := dig(req, amount)
+							if digFunc != nil {
+								digChan <- digFunc
+							}
+						}
+						return
+					}
+					if res.StatusCode == 403 {
+						fmt.Printf("dig invalid license(request: %+v)\n", req)
+
+						calcChan <- func(ctx context.Context) {
+							fmt.Println("set next dig")
+							req.Depth++
+							digFunc := dig(req, amount)
+							if digFunc != nil {
+								digChan <- digFunc
+							}
 						}
 						return
 					}
@@ -262,7 +278,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 						ok := errors.As(err, &apiErr)
 						if ok {
-							fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+							fmt.Printf("dig error(request: %+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
 						}
 						fmt.Println("dig error:", err)
 						continue
@@ -281,7 +297,10 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 
 				if len(treasures) < amount {
 					req.Depth++
-					digChan <- dig(req, amount-len(treasures))
+					digFunc := dig(req, amount-len(treasures))
+					if digFunc != nil {
+						digChan <- digFunc
+					}
 				}
 			}
 		}
@@ -331,7 +350,23 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						calcChan <- func(ctx context.Context) {
 							fmt.Println("set next dig")
 							req.Depth++
-							digChan <- dig(req, amount)
+							digFunc := dig(req, amount)
+							if digFunc != nil {
+								digChan <- digFunc
+							}
+						}
+						return
+					}
+					if res.StatusCode == 403 {
+						fmt.Printf("dig invalid license(request: %+v)\n", req)
+
+						calcChan <- func(ctx context.Context) {
+							fmt.Println("set next dig")
+							req.Depth++
+							digFunc := dig(req, amount)
+							if digFunc != nil {
+								digChan <- digFunc
+							}
 						}
 						return
 					}
@@ -339,7 +374,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 						ok := errors.As(err, &apiErr)
 						if ok {
-							fmt.Printf("dig error(%+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
+							fmt.Printf("dig error:%+v\n", apiErr.Model().(openapi.ModelError))
 						}
 						fmt.Println("dig error:", err)
 						continue
@@ -359,7 +394,10 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 
 					if len(treasures) < amount {
 						req.Depth++
-						digChan <- dig(req, amount-len(treasures))
+						digFunc := dig(req, amount-len(treasures))
+						if digFunc != nil {
+							digChan <- digFunc
+						}
 					}
 				}
 			}
@@ -387,7 +425,23 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				calcChan <- func(ctx context.Context) {
 					fmt.Println("set next dig")
 					req.Depth++
-					digChan <- dig(req, amount)
+					digFunc := dig(req, amount)
+					if digFunc != nil {
+						digChan <- digFunc
+					}
+				}
+				return
+			}
+			if res.StatusCode == 403 {
+				fmt.Printf("dig invalid license(request: %+v)\n", req)
+
+				calcChan <- func(ctx context.Context) {
+					fmt.Println("set next dig")
+					req.Depth++
+					digFunc := dig(req, amount)
+					if digFunc != nil {
+						digChan <- digFunc
+					}
 				}
 				return
 			}
@@ -395,7 +449,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 				ok := errors.As(err, &apiErr)
 				if ok {
-					fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+					fmt.Printf("dig error(request: %+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
 				}
 				fmt.Println("dig error:", err)
 				continue
@@ -414,7 +468,10 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 			}
 
 			if len(treasures) < amount {
-				digChan <- dig(req, amount-len(treasures))
+				digFunc := dig(req, amount-len(treasures))
+				if digFunc != nil {
+					digChan <- digFunc
+				}
 			}
 		}
 	}
