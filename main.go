@@ -59,6 +59,7 @@ var (
 
 func main() {
 	startTime = time.Now()
+	fmt.Println(startTime.String())
 
 	ctx := context.Background()
 
@@ -66,7 +67,7 @@ func main() {
 
 	for i := 0; i < RequestRoutineNum; i++ {
 		wg.Add(1)
-		go func() {
+		go func(i int) {
 			defer wg.Done()
 			for {
 				var requestFunc func(context.Context)
@@ -79,9 +80,10 @@ func main() {
 					//fmt.Println("license")
 				case requestFunc = <-exploreChan:
 				}
+				fmt.Printf("request func start(routine: %d):%+v\n", i, time.Now())
 				requestFunc(ctx)
 			}
-		}()
+		}(i)
 	}
 
 	for i := 0; i < CalcRoutineNum; i++ {
