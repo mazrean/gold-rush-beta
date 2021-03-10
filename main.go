@@ -131,7 +131,7 @@ func licenses(req []int32) func(context.Context) {
 				} else {
 					fmt.Println("license error:", err)
 				}
-				if res.StatusCode == 409 {
+				if res != nil && res.StatusCode == 409 {
 					licenses, _, err := api.ListLicenses(ctx).Execute()
 					if err != nil {
 						var apiErr openapi.GenericOpenAPIError
@@ -152,7 +152,7 @@ func licenses(req []int32) func(context.Context) {
 			break
 		}
 
-		if res.StatusCode != 200 {
+		if res != nil && res.StatusCode != 200 {
 			return
 		}
 
@@ -186,7 +186,7 @@ func explore(req *openapi.Area) func(context.Context) {
 			return
 		}
 		calcChan <- func(ctx context.Context) {
-			if res.StatusCode != 200 || report.Amount == 0 {
+			if !(res != nil && res.StatusCode == 200) || report.Amount == 0 {
 				return
 			}
 
@@ -257,7 +257,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					//startTime := time.Now()
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
 					//requestTime := time.Since(startTime).Milliseconds()
-					if res.StatusCode == 404 {
+					if res != nil && res.StatusCode == 404 {
 						//fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
 						calcChan <- func(ctx context.Context) {
@@ -270,7 +270,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						}
 						return
 					}
-					if res.StatusCode == 403 {
+					if res != nil && res.StatusCode == 403 {
 						fmt.Printf("dig invalid license(request: %+v)\n", req)
 
 						calcChan <- func(ctx context.Context) {
@@ -295,7 +295,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					break
 				}
 
-				if res.StatusCode != 200 {
+				if res != nil && res.StatusCode != 200 {
 					return
 				}
 
@@ -353,7 +353,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					//startTime := time.Now()
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
 					//requestTime := time.Since(startTime).Milliseconds()
-					if res.StatusCode == 404 {
+					if res != nil && res.StatusCode == 404 {
 						//fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
 						calcChan <- func(ctx context.Context) {
@@ -366,7 +366,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						}
 						return
 					}
-					if res.StatusCode == 403 {
+					if res != nil && res.StatusCode == 403 {
 						fmt.Printf("dig invalid license(request: %+v)\n", req)
 
 						calcChan <- func(ctx context.Context) {
@@ -392,7 +392,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				}
 
 				calcChan <- func(ctx context.Context) {
-					if res.StatusCode != 200 {
+					if res != nil && res.StatusCode != 200 {
 						return
 					}
 
@@ -427,7 +427,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 			//startTime := time.Now()
 			treasures, res, err = api.Dig(ctx).Args(*req).Execute()
 			//requestTime := time.Since(startTime).Milliseconds()
-			if res.StatusCode == 404 {
+			if res != nil && res.StatusCode == 404 {
 				//fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
 				calcChan <- func(ctx context.Context) {
@@ -440,7 +440,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				}
 				return
 			}
-			if res.StatusCode == 403 {
+			if res != nil && res.StatusCode == 403 {
 				fmt.Printf("dig invalid license(request: %+v)\n", req)
 
 				calcChan <- func(ctx context.Context) {
@@ -466,7 +466,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		}
 
 		calcChan <- func(ctx context.Context) {
-			if res.StatusCode != 200 {
+			if res != nil && res.StatusCode != 200 {
 				return
 			}
 
@@ -504,7 +504,7 @@ func cache(req string) func(context.Context) {
 			fmt.Printf("cash request succeeded(%s):%d\n", req, len(newCoins))
 			break
 		}
-		if res.StatusCode != 200 {
+		if res != nil && res.StatusCode != 200 {
 			return
 		}
 
