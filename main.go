@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -255,11 +254,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				var res *http.Response
 				var err error
 				for {
-					startTime := time.Now()
+					//startTime := time.Now()
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
-					requestTime := time.Since(startTime).Milliseconds()
+					//requestTime := time.Since(startTime).Milliseconds()
 					if res.StatusCode == 404 {
-						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
+						//fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
@@ -287,12 +286,12 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						var apiErr openapi.GenericOpenAPIError
 						ok := errors.As(err, &apiErr)
 						if ok {
-							fmt.Printf("dig error(request: %+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
+							//fmt.Printf("dig error(request: %+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
 						}
-						fmt.Println("dig error:", err)
+						//fmt.Println("dig error:", err)
 						continue
 					}
-					fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
+					//fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
 					break
 				}
 
@@ -325,7 +324,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 	licenseLocker.RUnlock()
 
 	if remain < 1 {
-		fmt.Printf("coin use index:%d\n", int(time.Since(startTime).Minutes()))
+		//fmt.Printf("coin use index:%d\n", int(time.Since(startTime).Minutes()))
 		reqCoinLen := coinUses[int(time.Since(startTime).Minutes())]
 		coinsLen := len(coins)
 		coinsLocker.Lock()
@@ -351,11 +350,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				var res *http.Response
 				var err error
 				for {
-					startTime := time.Now()
+					//startTime := time.Now()
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
-					requestTime := time.Since(startTime).Milliseconds()
+					//requestTime := time.Since(startTime).Milliseconds()
 					if res.StatusCode == 404 {
-						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
+						//fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
@@ -383,12 +382,12 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						var apiErr openapi.GenericOpenAPIError
 						ok := errors.As(err, &apiErr)
 						if ok {
-							fmt.Printf("dig error:%+v\n", apiErr.Model().(openapi.ModelError))
+							//fmt.Printf("dig error:%+v\n", apiErr.Model().(openapi.ModelError))
 						}
-						fmt.Println("dig error:", err)
+						//fmt.Println("dig error:", err)
 						continue
 					}
-					fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
+					//fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
 					break
 				}
 
@@ -425,11 +424,11 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		var res *http.Response
 		var err error
 		for {
-			startTime := time.Now()
+			//startTime := time.Now()
 			treasures, res, err = api.Dig(ctx).Args(*req).Execute()
-			requestTime := time.Since(startTime).Milliseconds()
+			//requestTime := time.Since(startTime).Milliseconds()
 			if res.StatusCode == 404 {
-				fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
+				//fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
 				calcChan <- func(ctx context.Context) {
 					//fmt.Println("set next dig")
@@ -457,12 +456,12 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				var apiErr openapi.GenericOpenAPIError
 				ok := errors.As(err, &apiErr)
 				if ok {
-					fmt.Printf("dig error(request: %+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
+					//fmt.Printf("dig error(request: %+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
 				}
-				fmt.Println("dig error:", err)
+				//fmt.Println("dig error:", err)
 				continue
 			}
-			fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
+			//fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
 			break
 		}
 
