@@ -273,7 +273,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 	licenseLocker.RUnlock()
 
 	if remain < 1 {
-		reqCoinLen := coinUses[int(time.Since(startTime).Minutes())]
+		reqCoinLen := coinUses[9-int(time.Since(startTime).Minutes())]
 		coinsLen := len(coins)
 		coinsLocker.Lock()
 		var reqCoins []int32
