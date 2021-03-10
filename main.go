@@ -59,11 +59,6 @@ var (
 )
 
 func main() {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Printf("recovered(%s)\n", time.Now().String())
-		}
-	}()
 	startTime = time.Now()
 	fmt.Println(startTime.String())
 
