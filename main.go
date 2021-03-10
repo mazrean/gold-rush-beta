@@ -20,7 +20,7 @@ const (
 	RequestChanLen    = 10
 	CalcChanLen       = 10
 	Area              = 3500
-	ExploreArea       = 1
+	ExploreArea       = 10
 )
 
 var (
@@ -229,15 +229,22 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		digQueue <- func(licenseID int32) func(context.Context) {
 			return func(ctx context.Context) {
 				req.LicenseID = licenseID
-				treasures, res, err := api.Dig(ctx).Args(*req).Execute()
-				if err != nil {
-					var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
-					ok := errors.As(err, &apiErr)
-					if ok {
-						//fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+				var treasures []string
+				var res *http.Response
+				var err error
+				for {
+					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
+					if err != nil {
+						var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+						ok := errors.As(err, &apiErr)
+						if ok {
+							fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+						}
+						fmt.Println("dig error:", err)
+						continue
 					}
-					//fmt.Println("dig error:", err)
-					return
+					fmt.Printf("treasures: %s\n", strings.Join(treasures, ", "))
+					break
 				}
 
 				if res.StatusCode != 200 {
@@ -287,15 +294,22 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		digQueue <- func(licenseID int32) func(ctx context.Context) {
 			return func(ctx context.Context) {
 				req.LicenseID = license.Id
-				treasures, res, err := api.Dig(ctx).Args(*req).Execute()
-				if err != nil {
-					var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
-					ok := errors.As(err, &apiErr)
-					if ok {
-						//fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+				var treasures []string
+				var res *http.Response
+				var err error
+				for {
+					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
+					if err != nil {
+						var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+						ok := errors.As(err, &apiErr)
+						if ok {
+							fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+						}
+						fmt.Println("dig error:", err)
+						continue
 					}
-					//fmt.Println("dig error:", err)
-					return
+					fmt.Printf("treasures: %s\n", strings.Join(treasures, ", "))
+					break
 				}
 
 				calcChan <- func(ctx context.Context) {
@@ -325,15 +339,22 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 	licenseLocker.RUnlock()
 
 	return func(ctx context.Context) {
-		treasures, res, err := api.Dig(ctx).Args(*req).Execute()
-		if err != nil {
-			var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
-			ok := errors.As(err, &apiErr)
-			if ok {
-				//fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+		var treasures []string
+		var res *http.Response
+		var err error
+		for {
+			treasures, res, err = api.Dig(ctx).Args(*req).Execute()
+			if err != nil {
+				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
+				ok := errors.As(err, &apiErr)
+				if ok {
+					fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+				}
+				fmt.Println("dig error:", err)
+				continue
 			}
-			//fmt.Println("dig error:", err)
-			return
+			fmt.Printf("treasures: %s\n", strings.Join(treasures, ", "))
+			break
 		}
 
 		calcChan <- func(ctx context.Context) {
