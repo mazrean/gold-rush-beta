@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	RequestRoutineNum = 3
+	RequestRoutineNum = 2
 	CalcRoutineNum    = 2
 	RequestChanLen    = 10
 	CalcChanLen       = 10
@@ -302,11 +303,13 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						return
 					}
 
+					fmt.Printf("treasures: %s\n", strings.Join(treasures, ", "))
 					for _, treasure := range treasures {
 						cacheChan <- cache(treasure)
 					}
 
 					if len(treasures) < amount {
+						req.Depth++
 						digChan <- dig(req, amount-len(treasures))
 					}
 				}
@@ -366,6 +369,7 @@ func cache(req string) func(context.Context) {
 				fmt.Println("cache error:", err)
 				continue
 			}
+			fmt.Println("cash request succeeded")
 			break
 		}
 		if res.StatusCode != 200 {
