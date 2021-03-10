@@ -20,7 +20,7 @@ const (
 	RequestChanLen    = 10
 	CalcChanLen       = 10
 	Area              = 3500
-	ExploreArea       = 2
+	ExploreArea       = 1
 )
 
 var (
@@ -49,7 +49,7 @@ var (
 	coins       = []int32{}
 
 	coinUses = [10]int{10, 9, 8, 7, 6, 2, 2, 2, 2, 0}
-	digDepth = [10]int32{5, 5, 5, 5, 5, 5, 4, 3, 2, 1}
+	digDepth = [10]int32{10, 5, 5, 5, 5, 5, 4, 3, 2, 1}
 
 	cacheChan   = make(chan func(context.Context), RequestChanLen)
 	licenseChan = make(chan func(context.Context), RequestChanLen)
@@ -217,10 +217,11 @@ func explore(req *openapi.Area) func(context.Context) {
 					})
 				}
 			} else {
+				fmt.Printf("dig depth index:%d\n", int(time.Since(startTime).Minutes()))
 				digFunc := dig(&openapi.Dig{
 					PosX:  req.PosX,
 					PosY:  req.PosY,
-					Depth: digDepth[9-int(time.Since(startTime).Minutes())],
+					Depth: digDepth[int(time.Since(startTime).Minutes())],
 				}, int(report.Amount))
 				if digFunc != nil {
 					digChan <- digFunc
@@ -312,7 +313,8 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 	licenseLocker.RUnlock()
 
 	if remain < 1 {
-		reqCoinLen := coinUses[9-int(time.Since(startTime).Minutes())]
+		fmt.Printf("coin use index:%d\n", int(time.Since(startTime).Minutes()))
+		reqCoinLen := coinUses[int(time.Since(startTime).Minutes())]
 		coinsLen := len(coins)
 		coinsLocker.Lock()
 		var reqCoins []int32
