@@ -275,6 +275,18 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					}
 					if res != nil && res.StatusCode == 403 {
 						fmt.Printf("dig invalid license(request: %+v)\n", req)
+						licenses, _, err := api.ListLicenses(ctx).Execute()
+						if err != nil {
+							var apiErr openapi.GenericOpenAPIError
+							ok := errors.As(err, &apiErr)
+							if ok {
+								fmt.Printf("get license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+							} else {
+								fmt.Println("get license error:", err)
+							}
+						}
+
+						fmt.Printf("licenses: %+v\n", licenses)
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
@@ -364,6 +376,18 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					}
 					if res != nil && res.StatusCode == 403 {
 						fmt.Printf("dig invalid license(request: %+v)\n", req)
+						licenses, _, err := api.ListLicenses(ctx).Execute()
+						if err != nil {
+							var apiErr openapi.GenericOpenAPIError
+							ok := errors.As(err, &apiErr)
+							if ok {
+								fmt.Printf("get license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+							} else {
+								fmt.Println("get license error:", err)
+							}
+						}
+
+						fmt.Printf("licenses: %+v\n", licenses)
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
@@ -442,6 +466,18 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 			}
 			if res != nil && res.StatusCode == 403 {
 				fmt.Printf("dig invalid license(request: %+v)\n", req)
+				licenses, _, err := api.ListLicenses(ctx).Execute()
+				if err != nil {
+					var apiErr openapi.GenericOpenAPIError
+					ok := errors.As(err, &apiErr)
+					if ok {
+						fmt.Printf("get license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+					} else {
+						fmt.Println("get license error:", err)
+					}
+				}
+
+				fmt.Printf("licenses: %+v\n", licenses)
 
 				calcChan <- func(ctx context.Context) {
 					//fmt.Println("set next dig")
