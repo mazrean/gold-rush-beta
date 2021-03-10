@@ -3,11 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/signal"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/api"
@@ -29,12 +26,11 @@ func main() {
 
 	wg := sync.WaitGroup{}
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGKILL, syscall.SIGTERM)
+	timer := time.Tick(9*time.Minute + 50*time.Second)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		fmt.Println(<-sigs)
+		fmt.Println(<-timer)
 		cancel()
 
 		finish()
