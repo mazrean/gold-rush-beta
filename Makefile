@@ -1,8 +1,11 @@
 LOCAL_TAG = gold-rush:latest
+REMOTE_TAG = stor.highloadcup.ru/rally/electric_albatross
 
 .PHONY: build
 build:
-	docker build -t $(LOCAL_TAG) .
+	docker build -t $(LOCAL_TAG)
+    docker tag $(LOCAL_TAG) $(REMOTE_TAG)
+    docker push $(REMOTE_TAG)
 
 .PHONY: generate
 generate:
