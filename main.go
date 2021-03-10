@@ -58,6 +58,11 @@ var (
 )
 
 func main() {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("recovered(%s)\n", time.Now().String())
+		}
+	}()
 	startTime = time.Now()
 	fmt.Println(startTime.String())
 
@@ -86,7 +91,6 @@ func main() {
 					fmt.Printf("nil func(state:%s)", state)
 					continue
 				}
-				fmt.Printf("request func start(routine: %d):%+v\n", i, time.Now())
 				requestFunc(ctx)
 			}
 		}(i)
@@ -335,7 +339,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 						ok := errors.As(err, &apiErr)
 						if ok {
-							fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+							fmt.Printf("dig error(%+v):%+v\n", req, apiErr.Model().(openapi.ModelError))
 						}
 						fmt.Println("dig error:", err)
 						continue
