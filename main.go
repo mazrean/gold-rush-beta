@@ -198,6 +198,9 @@ func insertLicense() {
 
 func license(ctx context.Context, arg []int32) {
 	api.IssueLicense(ctx, arg)
+	digQueueCheckLocker.Lock()
+	isDigQueued = false
+	digQueueCheckLocker.Unlock()
 
 	normalChan <- func() {
 		for arg := range digQueue {
