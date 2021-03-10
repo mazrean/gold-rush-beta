@@ -58,6 +58,24 @@ func Statistic(sb strings.Builder) {
 		coinLicenses[i] /= float64(len(allows))
 	}
 
+	var cashReqTime float64 = 0
+	for _, requestTime := range cashRequestTime {
+		cashReqTime += float64(requestTime)
+	}
+	cashReqTime /= float64(len(cashRequestTime))
+
+	var cashRetry float64 = 0
+	for _, retry := range cashRetryNum {
+		cashRetry += float64(retry)
+	}
+	cashRetry /= float64(len(cashRetryNum))
+
+	var aveCoinNum float64 = 0
+	for _, coin := range coinNum {
+		aveCoinNum += float64(coin)
+	}
+	aveCoinNum /= float64(len(coinNum))
+
 	sb.WriteString(fmt.Sprintf(`api metrics:
 	dig:
 		called num:%d
@@ -73,6 +91,11 @@ func Statistic(sb strings.Builder) {
 		retry num:%g
 		request time:%g
 		coin num-allow: %g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g
+	cash:
+		called num:%d
+		retry num:%g
+		request time:%g
+		coin num ave:%g
 `,
 		digCalledNum,
 		digRetry,
@@ -103,5 +126,9 @@ func Statistic(sb strings.Builder) {
 		coinLicenses[7],
 		coinLicenses[8],
 		coinLicenses[9],
-		coinLicenses[10]))
+		coinLicenses[10],
+		cashCalledNum,
+		cashRetry,
+		cashReqTime,
+		aveCoinNum))
 }
