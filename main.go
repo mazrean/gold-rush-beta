@@ -143,7 +143,7 @@ func licenses(req []int32) func(context.Context) {
 						}
 					}
 
-					fmt.Printf("licenses: %+v", licenses)
+					fmt.Printf("licenses: %+v\n", licenses)
 				}
 
 				continue
