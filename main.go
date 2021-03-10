@@ -142,9 +142,9 @@ func licenses(req []int32) func(context.Context) {
 						} else {
 							fmt.Println("get license error:", err)
 						}
+					} else {
+						fmt.Printf("licenses: %+v\n", licenses)
 					}
-
-					fmt.Printf("licenses: %+v\n", licenses)
 				}
 
 				continue
@@ -284,9 +284,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 							} else {
 								fmt.Println("get license error:", err)
 							}
+						} else {
+							fmt.Printf("licenses: %+v\n", licenses)
 						}
-
-						fmt.Printf("licenses: %+v\n", licenses)
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
@@ -385,9 +385,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 							} else {
 								fmt.Println("get license error:", err)
 							}
+						} else {
+							fmt.Printf("licenses: %+v\n", licenses)
 						}
-
-						fmt.Printf("licenses: %+v\n", licenses)
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
@@ -475,9 +475,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					} else {
 						fmt.Println("get license error:", err)
 					}
+				} else {
+					fmt.Printf("licenses: %+v\n", licenses)
 				}
-
-				fmt.Printf("licenses: %+v\n", licenses)
 
 				calcChan <- func(ctx context.Context) {
 					//fmt.Println("set next dig")
