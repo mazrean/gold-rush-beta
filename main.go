@@ -132,6 +132,20 @@ func licenses(req []int32) func(context.Context) {
 				} else {
 					fmt.Println("license error:", err)
 				}
+				if res.StatusCode == 409 {
+					licenses, _, err := api.ListLicenses(ctx).Execute()
+					if err != nil {
+						var apiErr openapi.GenericOpenAPIError
+						ok := errors.As(err, &apiErr)
+						if ok {
+							fmt.Printf("get license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+						} else {
+							fmt.Println("get license error:", err)
+						}
+					}
+
+					fmt.Printf("licenses: %+v", licenses)
+				}
 
 				continue
 			}
@@ -146,7 +160,7 @@ func licenses(req []int32) func(context.Context) {
 		licenseLocker.Lock()
 		license = &licenseVal
 		var digNum int32
-		if len(digQueue) <= int(license.DigAllowed) {
+		if len(digQueue) <= int(licenseVal.DigAllowed) {
 			license.DigUsed = int32(len(digQueue))
 			digNum = int32(len(digQueue))
 		} else {
