@@ -236,6 +236,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					startTime := time.Now()
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
 					requestTime := time.Since(startTime).Milliseconds()
+					if res.StatusCode == 404 {
+						return
+					}
 					if err != nil {
 						var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 						ok := errors.As(err, &apiErr)
@@ -300,7 +303,12 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				var res *http.Response
 				var err error
 				for {
+					startTime := time.Now()
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
+					requestTime := time.Since(startTime).Milliseconds()
+					if res.StatusCode == 404 {
+						return
+					}
 					if err != nil {
 						var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 						ok := errors.As(err, &apiErr)
@@ -310,7 +318,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						fmt.Println("dig error:", err)
 						continue
 					}
-					fmt.Printf("treasures: %s\n", strings.Join(treasures, ", "))
+					fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
 					break
 				}
 
@@ -345,7 +353,12 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		var res *http.Response
 		var err error
 		for {
+			startTime := time.Now()
 			treasures, res, err = api.Dig(ctx).Args(*req).Execute()
+			requestTime := time.Since(startTime).Milliseconds()
+			if res.StatusCode == 404 {
+				return
+			}
 			if err != nil {
 				var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 				ok := errors.As(err, &apiErr)
@@ -355,7 +368,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				fmt.Println("dig error:", err)
 				continue
 			}
-			fmt.Printf("treasures: %s\n", strings.Join(treasures, ", "))
+			fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
 			break
 		}
 
