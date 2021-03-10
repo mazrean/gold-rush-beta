@@ -20,7 +20,7 @@ const (
 	RequestChanLen    = 10
 	CalcChanLen       = 10
 	Area              = 3500
-	ExploreArea       = 1
+	ExploreArea       = 2
 )
 
 var (
@@ -263,7 +263,6 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
-							req.Depth++
 							digFunc := dig(req, amount)
 							if digFunc != nil {
 								digChan <- digFunc
@@ -359,7 +358,6 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 
 						calcChan <- func(ctx context.Context) {
 							//fmt.Println("set next dig")
-							req.Depth++
 							digFunc := dig(req, amount)
 							if digFunc != nil {
 								digChan <- digFunc
@@ -434,7 +432,6 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 
 				calcChan <- func(ctx context.Context) {
 					//fmt.Println("set next dig")
-					req.Depth++
 					digFunc := dig(req, amount)
 					if digFunc != nil {
 						digChan <- digFunc
