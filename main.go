@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	RequestRoutineNum = 3
+	RequestRoutineNum = 4
 	CalcRoutineNum    = 2
-	RequestChanLen    = 10
-	CalcChanLen       = 10
+	RequestChanLen    = 50
+	CalcChanLen       = 50
 	Area              = 3500
 	ExploreArea       = 1
 )
