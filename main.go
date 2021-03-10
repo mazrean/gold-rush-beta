@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -256,9 +257,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				var res *http.Response
 				var err error
 				for {
-					//startTime := time.Now()
+					startTime := time.Now()
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
-					//requestTime := time.Since(startTime).Milliseconds()
+					requestTime := time.Since(startTime).Milliseconds()
 					if res != nil && res.StatusCode == 404 {
 						//fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
@@ -293,7 +294,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						//fmt.Println("dig error:", err)
 						continue
 					}
-					//fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
+					fmt.Printf("dig succeeded(request:%+v): {treasures: %s, requestTime: %d}\n", req, strings.Join(treasures, ", "), requestTime)
 					break
 				}
 
@@ -345,9 +346,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				var res *http.Response
 				var err error
 				for {
-					//startTime := time.Now()
+					startTime := time.Now()
 					treasures, res, err = api.Dig(ctx).Args(*req).Execute()
-					//requestTime := time.Since(startTime).Milliseconds()
+					requestTime := time.Since(startTime).Milliseconds()
 					if res != nil && res.StatusCode == 404 {
 						//fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
@@ -382,7 +383,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						//fmt.Println("dig error:", err)
 						continue
 					}
-					//fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
+					fmt.Printf("dig succeeded(request:%+v): {treasures: %s, requestTime: %d}\n", req, strings.Join(treasures, ", "), requestTime)
 					break
 				}
 
@@ -423,9 +424,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 		var res *http.Response
 		var err error
 		for {
-			//startTime := time.Now()
+			startTime := time.Now()
 			treasures, res, err = api.Dig(ctx).Args(*req).Execute()
-			//requestTime := time.Since(startTime).Milliseconds()
+			requestTime := time.Since(startTime).Milliseconds()
 			if res != nil && res.StatusCode == 404 {
 				//fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 
@@ -460,7 +461,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				//fmt.Println("dig error:", err)
 				continue
 			}
-			//fmt.Printf("dig succeeded(depth:%d): {treasures: %s, requestTime: %d}\n", req.Depth, strings.Join(treasures, ", "), requestTime)
+			fmt.Printf("dig succeeded(request:%+v): {treasures: %s, requestTime: %d}\n", req, strings.Join(treasures, ", "), requestTime)
 			break
 		}
 
