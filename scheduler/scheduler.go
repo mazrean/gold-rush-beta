@@ -28,6 +28,10 @@ func Setup() {
 	heap.Init(ph)
 }
 
+func Len() int {
+	return len(*ph)
+}
+
 func Push(point *Point) {
 	atomic.AddInt64(&pushCalledNum, 1)
 
@@ -91,7 +95,8 @@ func Statistic(sb strings.Builder) {
 	pop:
 		called num:%d
 		depth:%g
-		amount:%g`,
+		amount:%g
+`,
 		pushCalledNum,
 		avePushDepth,
 		avePushAmount,

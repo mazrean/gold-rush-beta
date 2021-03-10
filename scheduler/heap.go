@@ -1,9 +1,9 @@
 package scheduler
 
+import "github.com/mazrean/gold-rush-beta/openapi"
+
 type Point struct {
-	X      int32
-	Y      int32
-	Depth  int32
+	*openapi.Dig
 	Amount int32
 }
 

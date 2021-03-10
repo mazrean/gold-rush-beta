@@ -38,7 +38,7 @@ var (
 	licenses               = []*openapi.License{}
 )
 
-func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) {
+func IssueLicense(ctx context.Context, coins []int32) {
 	atomic.AddInt64(&issueLicenseCalledNum, 1)
 
 	var (
@@ -91,8 +91,6 @@ func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) 
 	coinNumLicenses[len(coins)] = append(coinNumLicenses[len(coins)], int8(license.DigAllowed))
 	issueLicenseRetryNum = append(issueLicenseRetryNum, i)
 	licenseMetricsLocker.Unlock()
-
-	return &license, nil
 }
 
 var (
