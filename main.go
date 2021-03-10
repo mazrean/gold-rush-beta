@@ -239,7 +239,17 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					if res.StatusCode == 404 {
 						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 						req.Depth++
-						digChan <- dig(req, amount)
+
+						calcChan <- func(ctx context.Context) {
+							if res.StatusCode != 200 {
+								return
+							}
+
+							if len(treasures) < amount {
+								req.Depth++
+								digChan <- dig(req, amount)
+							}
+						}
 						return
 					}
 					if err != nil {
@@ -312,7 +322,17 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					if res.StatusCode == 404 {
 						fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 						req.Depth++
-						digChan <- dig(req, amount)
+
+						calcChan <- func(ctx context.Context) {
+							if res.StatusCode != 200 {
+								return
+							}
+
+							if len(treasures) < amount {
+								req.Depth++
+								digChan <- dig(req, amount)
+							}
+						}
 						return
 					}
 					if err != nil {
@@ -333,7 +353,6 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 						return
 					}
 
-					fmt.Printf("treasures: %s\n", strings.Join(treasures, ", "))
 					for _, treasure := range treasures {
 						cacheChan <- cache(treasure)
 					}
@@ -365,7 +384,17 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 			if res.StatusCode == 404 {
 				fmt.Printf("dig not found(depth:%d): {requestTime: %d}\n", req.Depth, requestTime)
 				req.Depth++
-				digChan <- dig(req, amount)
+
+				calcChan <- func(ctx context.Context) {
+					if res.StatusCode != 200 {
+						return
+					}
+
+					if len(treasures) < amount {
+						req.Depth++
+						digChan <- dig(req, amount)
+					}
+				}
 				return
 			}
 			if err != nil {
