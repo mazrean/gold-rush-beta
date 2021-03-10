@@ -32,7 +32,7 @@ var (
 			},
 		},
 		HTTPClient: http.DefaultClient,
-		Debug:      false,
+		Debug:      true,
 	})
 	api = client.DefaultApi
 
@@ -71,11 +71,11 @@ func main() {
 				var requestFunc func(context.Context)
 				select {
 				case requestFunc = <-cacheChan:
-					fmt.Println("cache")
+					//fmt.Println("cache")
 				case requestFunc = <-digChan:
-					fmt.Println("dig")
+					//fmt.Println("dig")
 				case requestFunc = <-licenseChan:
-					fmt.Println("license")
+					//fmt.Println("license")
 				case requestFunc = <-exploreChan:
 				}
 				requestFunc(ctx)
@@ -233,9 +233,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 					ok := errors.As(err, &apiErr)
 					if ok {
-						fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+						//fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 					}
-					fmt.Println("dig error:", err)
+					//fmt.Println("dig error:", err)
 					return
 				}
 
@@ -248,6 +248,7 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 				}
 
 				if len(treasures) < amount {
+					req.Depth++
 					digChan <- dig(req, amount-len(treasures))
 				}
 			}
@@ -290,9 +291,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 					var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 					ok := errors.As(err, &apiErr)
 					if ok {
-						fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+						//fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 					}
-					fmt.Println("dig error:", err)
+					//fmt.Println("dig error:", err)
 					return
 				}
 
@@ -326,9 +327,9 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 			var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
 			ok := errors.As(err, &apiErr)
 			if ok {
-				fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+				//fmt.Printf("dig error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 			}
-			fmt.Println("dig error:", err)
+			//fmt.Println("dig error:", err)
 			return
 		}
 
@@ -349,8 +350,8 @@ func dig(req *openapi.Dig, amount int) func(context.Context) {
 }
 
 func cache(req string) func(context.Context) {
+	req = fmt.Sprintf(`"%s"`, req)
 	return func(ctx context.Context) {
-		fmt.Println(req)
 		newCoins, res, err := api.Cash(ctx).Args(req).Execute()
 		if err != nil {
 			var apiErr openapi.GenericOpenAPIError = err.(openapi.GenericOpenAPIError)
