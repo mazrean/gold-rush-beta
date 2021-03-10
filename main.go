@@ -48,7 +48,7 @@ var (
 	coinsLocker = sync.RWMutex{}
 	coins       = []int32{}
 
-	coinUses = [10]int{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
+	coinUses = [10]int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 
 	cacheChan   = make(chan func(context.Context), RequestChanLen)
 	licenseChan = make(chan func(context.Context), RequestChanLen)
