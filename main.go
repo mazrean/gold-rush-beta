@@ -369,7 +369,7 @@ func cache(req string) func(context.Context) {
 				fmt.Println("cache error:", err)
 				continue
 			}
-			fmt.Println("cash request succeeded")
+			fmt.Printf("cash request succeeded(%s):%d\n", req, len(newCoins))
 			break
 		}
 		if res.StatusCode != 200 {
