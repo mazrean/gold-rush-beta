@@ -232,6 +232,9 @@ func license(ctx context.Context, arg []int32) {
 	normalChan <- func() {
 		fmt.Printf("insertDig loop start\n")
 		defer fmt.Printf("insertDig loop end")
+		if len(digQueue) > int(license.DigAllowed) {
+			insertLicense()
+		}
 		for i := 0; i < int(license.DigAllowed); i++ {
 			insertDig(<-digQueue)
 		}
