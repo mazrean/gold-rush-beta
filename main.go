@@ -67,7 +67,7 @@ var (
 
 	normalChan chan func()
 
-	coinUses = [10]int{8, 8, 8, 8, 8, 8, 8, 8, 1, 0}
+	coinUses = [11]int{8, 8, 8, 8, 8, 8, 8, 8, 1, 1, 0}
 )
 
 func schedule(ctx context.Context) {
