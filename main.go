@@ -55,6 +55,7 @@ const (
 	normalWorkerNum  = 5
 	channelBuf       = 100
 	licenseSub       = 3
+	exploreWorkerNum = 5
 )
 
 var (
@@ -174,28 +175,19 @@ func schedule(ctx context.Context) {
 
 	var size int32 = 1
 
-	go func() {
-		for i := 3500 / 2; i < 3500; i++ {
-			for j := 0; j < 3500; j++ {
-				exploreChan <- &openapi.Area{
-					PosX:  int32(i),
-					PosY:  int32(j),
-					SizeX: &size,
-					SizeY: &size,
+	for k := 0; k < exploreWorkerNum; k++ {
+		go func(k int) {
+			for i := 3500 * k / exploreWorkerNum; i < 3500*(k+1)/exploreWorkerNum; i++ {
+				for j := 0; j < 3500; j++ {
+					exploreChan <- &openapi.Area{
+						PosX:  int32(i),
+						PosY:  int32(j),
+						SizeX: &size,
+						SizeY: &size,
+					}
 				}
 			}
-		}
-	}()
-
-	for i := 0; i < 3500/2; i++ {
-		for j := 0; j < 3500; j++ {
-			exploreChan <- &openapi.Area{
-				PosX:  int32(i),
-				PosY:  int32(j),
-				SizeX: &size,
-				SizeY: &size,
-			}
-		}
+		}(k)
 	}
 }
 
