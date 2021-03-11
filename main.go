@@ -88,7 +88,7 @@ func schedule(ctx context.Context) {
 			for {
 				select {
 				case arg := <-cashChan:
-					//fmt.Printf("cash\n")
+					fmt.Printf("cash\n")
 					cash(ctx, arg)
 					continue
 				case arg := <-digChan:
@@ -193,7 +193,9 @@ func dig(ctx context.Context, arg *scheduler.Point) {
 				//fmt.Printf("insert to cash chan start\n")
 				//defer fmt.Printf("insert to cash chan end\n")
 				for _, treasure := range treasures {
+					fmt.Printf("cash channel send start\n")
 					cashChan <- treasure
+					fmt.Printf("cash channel send end\n")
 				}
 			}
 		}(treasures)
