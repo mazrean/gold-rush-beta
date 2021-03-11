@@ -52,7 +52,7 @@ func finish() {
 
 const (
 	requestWorkerNum = 10
-	normalWorkerNum  = 3
+	normalWorkerNum  = 5
 	channelBuf       = 100
 	licenseSub       = 3
 )
@@ -67,7 +67,7 @@ var (
 
 	normalChan chan func()
 
-	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 1, 1, 0}
+	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1}
 )
 
 func schedule(ctx context.Context) {
