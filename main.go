@@ -87,7 +87,7 @@ func schedule(ctx context.Context) {
 		SCHEDULER:
 			for {
 				//fmt.Printf("loop time:%s\n", time.Now().String())
-				if time.Since(startTime).Minutes() < 4 {
+				if time.Since(startTime).Minutes() < 7 {
 					select {
 					case arg := <-exploreChan:
 						//fmt.Printf("explore\n")
