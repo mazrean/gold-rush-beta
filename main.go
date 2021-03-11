@@ -98,24 +98,6 @@ func schedule(ctx context.Context) {
 				default:
 				}
 
-				if time.Since(startTime).Minutes() < 5 {
-					select {
-					case arg := <-exploreChan:
-						//fmt.Printf("explore\n")
-						explore(ctx, arg)
-						continue
-					default:
-					}
-				} else {
-					select {
-					case arg := <-licenseChan:
-						//fmt.Printf("license\n")
-						license(ctx, arg)
-						continue
-					default:
-					}
-				}
-
 				select {
 				case arg := <-cashChan:
 					fmt.Printf("cash\n")
