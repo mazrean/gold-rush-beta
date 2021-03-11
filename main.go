@@ -58,7 +58,7 @@ const (
 	cashWorkerNum       = 3
 	normalWorkerNum     = 5
 	channelBuf          = 100
-	licenseSub          = 3
+	licenseSub          = 20
 	exploreSubWorkerNum = 5
 	reserveNum          = 10
 )
