@@ -53,7 +53,7 @@ func finish() {
 const (
 	requestWorkerNum = 4
 	normalWorkerNum  = 2
-	channelBuf       = 50
+	channelBuf       = 100
 )
 
 var (
