@@ -91,46 +91,6 @@ func schedule(ctx context.Context) {
 					//fmt.Printf("cash\n")
 					cash(ctx, arg)
 					continue
-				case <-ctx.Done():
-					break SCHEDULER
-				default:
-				}
-
-				select {
-				case arg := <-cashChan:
-					//fmt.Printf("cash\n")
-					cash(ctx, arg)
-					continue
-				case arg := <-digChan:
-					dig(ctx, arg)
-					continue
-				case <-ctx.Done():
-					break SCHEDULER
-				default:
-				}
-
-				select {
-				case arg := <-cashChan:
-					//fmt.Printf("cash\n")
-					cash(ctx, arg)
-					continue
-				case arg := <-digChan:
-					dig(ctx, arg)
-					continue
-				case arg := <-licenseChan:
-					//fmt.Printf("license\n")
-					license(ctx, arg)
-					continue
-				case <-ctx.Done():
-					break SCHEDULER
-				default:
-				}
-
-				select {
-				case arg := <-cashChan:
-					//fmt.Printf("cash\n")
-					cash(ctx, arg)
-					continue
 				case arg := <-digChan:
 					dig(ctx, arg)
 					continue
