@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/api"
@@ -59,6 +60,7 @@ const (
 	channelBuf          = 100
 	licenseSub          = 3
 	exploreSubWorkerNum = 5
+	reserveNum          = 6
 )
 
 var (
@@ -71,7 +73,9 @@ var (
 
 	normalChan chan func()
 
-	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1}
+	reservedLicenseNum int32 = 0
+
+	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6}
 )
 
 func schedule(ctx context.Context) {
@@ -132,7 +136,7 @@ func schedule(ctx context.Context) {
 					point := scheduler.Pop()
 					point.Dig.LicenseID = licenseID
 					digChan <- point
-					if len(api.LicenseChan) < licenseSub {
+					if len(api.LicenseChan)+reserveNum < licenseSub {
 						insertLicense()
 					}
 				}
@@ -144,7 +148,7 @@ func schedule(ctx context.Context) {
 					point := scheduler.Pop()
 					point.Dig.LicenseID = licenseID
 					digChan <- point
-					if len(api.LicenseChan) < licenseSub {
+					if len(api.LicenseChan)+reserveNum < licenseSub {
 						insertLicense()
 					}
 				}
@@ -221,6 +225,7 @@ func insertLicense() {
 	//fmt.Printf("insertLicense start\n")
 	//defer fmt.Printf("insertLicense end\n")
 	coins := api.PreserveCoin(coinUses[int(time.Since(startTime).Minutes())])
+	atomic.AddInt32(&reservedLicenseNum, reserveNum)
 	//fmt.Printf("coins:%+v\n", coins)
 	licenseChan <- coins
 	//fmt.Printf("license channel\n")
@@ -230,6 +235,7 @@ func license(ctx context.Context, arg []int32) {
 	//fmt.Printf("license start\n")
 	//defer fmt.Printf("license end\n")
 	api.IssueLicense(ctx, arg)
+	atomic.AddInt32(&reservedLicenseNum, -reserveNum)
 	//fmt.Printf("license:%+v\n", license)
 }
 
