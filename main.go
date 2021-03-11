@@ -52,7 +52,7 @@ func finish() {
 
 const (
 	requestWorkerNum = 4
-	normalWorkerNum  = 2
+	normalWorkerNum  = 3
 	channelBuf       = 100
 	licenseSub       = 3
 )
@@ -67,7 +67,7 @@ var (
 
 	normalChan chan func()
 
-	coinUses = [11]int{8, 8, 8, 8, 8, 8, 8, 8, 1, 1, 0}
+	coinUses = [11]int{8, 8, 8, 7, 7, 7, 6, 6, 1, 1, 0}
 )
 
 func schedule(ctx context.Context) {
@@ -87,14 +87,25 @@ func schedule(ctx context.Context) {
 		SCHEDULER:
 			for {
 				//fmt.Printf("loop time:%s\n", time.Now().String())
-				select {
-				case arg := <-cashChan:
-					//fmt.Printf("cash\n")
-					cash(ctx, arg)
-					continue
-				case <-ctx.Done():
-					break SCHEDULER
-				default:
+				if time.Since(startTime).Minutes() < 2 {
+					select {
+					case arg := <-exploreChan:
+						//fmt.Printf("explore\n")
+						explore(ctx, arg)
+					case <-ctx.Done():
+						break SCHEDULER
+					default:
+					}
+				} else {
+					select {
+					case arg := <-cashChan:
+						//fmt.Printf("cash\n")
+						cash(ctx, arg)
+						continue
+					case <-ctx.Done():
+						break SCHEDULER
+					default:
+					}
 				}
 
 				select {
