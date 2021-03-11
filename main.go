@@ -17,6 +17,7 @@ var startTime time.Time
 func main() {
 	startTime = time.Now()
 
+	api.Setup()
 	scheduler.Setup()
 
 	ctx := context.Background()
@@ -83,14 +84,13 @@ func schedule(ctx context.Context) {
 
 	for i := 0; i < requestWorkerNum; i++ {
 		go func() {
-			api := api.NewAPI()
 		SCHEDULER:
 			for {
 				//fmt.Printf("loop time:%s\n", time.Now().String())
 				select {
 				case arg := <-cashChan:
 					//fmt.Printf("cash\n")
-					cash(ctx, api, arg)
+					cash(ctx, arg)
 					continue
 				case <-ctx.Done():
 					break SCHEDULER
@@ -100,18 +100,18 @@ func schedule(ctx context.Context) {
 				select {
 				case arg := <-cashChan:
 					fmt.Printf("cash\n")
-					cash(ctx, api, arg)
+					cash(ctx, arg)
 					continue
 				case arg := <-digChan:
-					dig(ctx, api, arg)
+					dig(ctx, arg)
 					continue
 				case arg := <-licenseChan:
 					//fmt.Printf("license\n")
-					license(ctx, api, arg)
+					license(ctx, arg)
 					continue
 				case arg := <-exploreChan:
 					//fmt.Printf("explore\n")
-					explore(ctx, api, arg)
+					explore(ctx, arg)
 				case <-ctx.Done():
 					break SCHEDULER
 				}
@@ -174,7 +174,7 @@ func schedule(ctx context.Context) {
 	}
 }
 
-func cash(ctx context.Context, api *api.API, arg string) {
+func cash(ctx context.Context, arg string) {
 	api.Cash(ctx, arg)
 }
 
@@ -187,7 +187,7 @@ func insertDig(arg *scheduler.Point) {
 	digLicenseChan <- struct{}{}
 }
 
-func dig(ctx context.Context, api *api.API, arg *scheduler.Point) {
+func dig(ctx context.Context, arg *scheduler.Point) {
 	treasures, err := api.Dig(ctx, arg.Dig)
 	if err != nil {
 		//fmt.Printf("failed to dig: %+v", err)
@@ -222,14 +222,14 @@ func insertLicense() {
 	//fmt.Printf("license channel\n")
 }
 
-func license(ctx context.Context, api *api.API, arg []int32) {
+func license(ctx context.Context, arg []int32) {
 	//fmt.Printf("license start\n")
 	//defer fmt.Printf("license end\n")
 	api.IssueLicense(ctx, arg)
 	//fmt.Printf("license:%+v\n", license)
 }
 
-func explore(ctx context.Context, api *api.API, arg *openapi.Area) {
+func explore(ctx context.Context, arg *openapi.Area) {
 	//fmt.Printf("explore start\n")
 	//defer fmt.Printf("explore end\n")
 	report := api.Explore(ctx, arg)
