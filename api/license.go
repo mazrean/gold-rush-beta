@@ -67,7 +67,7 @@ func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
 			fmt.Printf("license error:%+v\n", err)
 		}
 		if res != nil && res.StatusCode == 409 {
-			licenses, _, err := api.ListLicenses(ctx).Execute()
+			licenseList, _, err := api.ListLicenses(ctx).Execute()
 			if err != nil {
 				var apiErr openapi.GenericOpenAPIError
 				ok := errors.As(err, &apiErr)
@@ -77,7 +77,7 @@ func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
 					fmt.Printf("get license error:%+v\n", err)
 				}
 			} else {
-				fmt.Printf("licenses: %+v\n", licenses)
+				fmt.Printf("licenses(%+v): %+v\n", licenses, licenseList)
 			}
 		}
 	}
