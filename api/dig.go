@@ -47,7 +47,7 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 		treasures, res, err = api.Dig(ctx).Args(*dig).Execute()
 		requestTime := time.Since(startTime).Nanoseconds()
 		digRequestTimeLocker.Lock()
-		digRequestTime[dig.Depth-1] = append(digRequestTime[dig.Depth], requestTime)
+		digRequestTime[dig.Depth-1] = append(digRequestTime[dig.Depth-1], requestTime)
 		digRequestTimeLocker.Unlock()
 
 		if err == nil {
