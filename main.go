@@ -51,11 +51,14 @@ func finish() {
 }
 
 const (
-	requestWorkerNum = 10
-	normalWorkerNum  = 5
-	channelBuf       = 100
-	licenseSub       = 3
-	exploreWorkerNum = 5
+	exploreWorkerNum    = 10
+	digWorkerNum        = 2
+	licenseWorkerNum    = 1
+	cashWorkerNum       = 3
+	normalWorkerNum     = 5
+	channelBuf          = 100
+	licenseSub          = 3
+	exploreSubWorkerNum = 5
 )
 
 var (
@@ -83,50 +86,34 @@ func schedule(ctx context.Context) {
 
 	insertLicense()
 
-	for i := 0; i < requestWorkerNum; i++ {
+	for i := 0; i < exploreWorkerNum; i++ {
 		go func() {
-		SCHEDULER:
-			for {
-				//fmt.Printf("loop time:%s\n", time.Now().String())
-				if time.Since(startTime).Minutes() < 9 {
-					select {
-					case arg := <-exploreChan:
-						//fmt.Printf("explore\n")
-						explore(ctx, arg)
-					case <-ctx.Done():
-						break SCHEDULER
-					default:
-					}
-				} else {
-					select {
-					case arg := <-cashChan:
-						//fmt.Printf("cash\n")
-						cash(ctx, arg)
-						continue
-					case <-ctx.Done():
-						break SCHEDULER
-					default:
-					}
-				}
+			for arg := range exploreChan {
+				explore(ctx, arg)
+			}
+		}()
+	}
 
-				select {
-				case arg := <-cashChan:
-					//fmt.Printf("cash\n")
-					cash(ctx, arg)
-					continue
-				case arg := <-digChan:
-					dig(ctx, arg)
-					continue
-				case arg := <-licenseChan:
-					//fmt.Printf("license\n")
-					license(ctx, arg)
-					continue
-				case arg := <-exploreChan:
-					//fmt.Printf("explore\n")
-					explore(ctx, arg)
-				case <-ctx.Done():
-					break SCHEDULER
-				}
+	for i := 0; i < digWorkerNum; i++ {
+		go func() {
+			for arg := range digChan {
+				dig(ctx, arg)
+			}
+		}()
+	}
+
+	for i := 0; i < licenseWorkerNum; i++ {
+		go func() {
+			for arg := range licenseChan {
+				license(ctx, arg)
+			}
+		}()
+	}
+
+	for i := 0; i < cashWorkerNum; i++ {
+		go func() {
+			for arg := range cashChan {
+				cash(ctx, arg)
 			}
 		}()
 	}
@@ -175,9 +162,9 @@ func schedule(ctx context.Context) {
 
 	var size int32 = 1
 
-	for k := 0; k < exploreWorkerNum; k++ {
+	for k := 0; k < exploreSubWorkerNum; k++ {
 		go func(k int) {
-			for i := 3500 * k / exploreWorkerNum; i < 3500*(k+1)/exploreWorkerNum; i++ {
+			for i := 3500 * k / exploreSubWorkerNum; i < 3500*(k+1)/exploreSubWorkerNum; i++ {
 				for j := 0; j < 3500; j++ {
 					exploreChan <- &openapi.Area{
 						PosX:  int32(i),
