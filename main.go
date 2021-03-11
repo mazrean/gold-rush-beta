@@ -207,6 +207,9 @@ func cash(ctx context.Context, arg string) {
 }
 
 func insertDig(arg *scheduler.Point) {
+	if arg.Amount <= 0 {
+		return
+	}
 	scheduler.Push(arg)
 	digLicenseChan <- struct{}{}
 }
