@@ -43,7 +43,7 @@ func Cash(ctx context.Context, treasure string) {
 		cashRequestTimeLocker.Unlock()
 
 		if err == nil {
-			fmt.Printf("cash succeeded\n")
+			//fmt.Printf("cash succeeded\n")
 			break
 		}
 		var apiErr openapi.GenericOpenAPIError
