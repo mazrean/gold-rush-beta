@@ -154,8 +154,9 @@ func cash(ctx context.Context, arg string) {
 func insertDig(arg *scheduler.Point) {
 	digQueueCheckLocker.Lock()
 	if isDigQueued {
-		digQueue <- arg
 		digQueueCheckLocker.Unlock()
+		digQueue <- arg
+		return
 	}
 
 	licenseID, err := api.PreserveLicense()
@@ -198,14 +199,14 @@ func insertLicense() {
 }
 
 func license(ctx context.Context, arg []int32) {
-	api.IssueLicense(ctx, arg)
+	license := api.IssueLicense(ctx, arg)
 	digQueueCheckLocker.Lock()
 	isDigQueued = false
 	digQueueCheckLocker.Unlock()
 
 	normalChan <- func() {
-		for arg := range digQueue {
-			insertDig(arg)
+		for i := 0; i < int(license.DigAllowed); i++ {
+			insertDig(<-digQueue)
 		}
 	}
 }
