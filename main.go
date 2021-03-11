@@ -54,7 +54,7 @@ const (
 	requestWorkerNum = 10
 	normalWorkerNum  = 5
 	channelBuf       = 100
-	licenseSub       = 3
+	licenseSub       = 8
 	exploreWorkerNum = 5
 )
 
@@ -88,7 +88,7 @@ func schedule(ctx context.Context) {
 		SCHEDULER:
 			for {
 				//fmt.Printf("loop time:%s\n", time.Now().String())
-				if time.Since(startTime).Minutes() < 7 {
+				if time.Since(startTime).Minutes() < 9 {
 					select {
 					case arg := <-exploreChan:
 						//fmt.Printf("explore\n")
