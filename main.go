@@ -171,7 +171,7 @@ func insertDig(arg *scheduler.Point) {
 	if arg.Amount <= 0 {
 		return
 	}
-	fmt.Printf("depth:%d", arg.Depth)
+	//fmt.Printf("depth:%d", arg.Depth)
 	scheduler.Push(arg)
 	digLicenseChan <- struct{}{}
 }
