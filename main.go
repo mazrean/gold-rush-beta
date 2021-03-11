@@ -60,7 +60,7 @@ const (
 	channelBuf          = 100
 	licenseSub          = 3
 	exploreSubWorkerNum = 5
-	reserveNum          = 6
+	reserveNum          = 10
 )
 
 var (
