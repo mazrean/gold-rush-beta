@@ -26,7 +26,7 @@ func main() {
 
 	wg := sync.WaitGroup{}
 
-	timer := time.Tick(9*time.Minute + 50*time.Second)
+	timer := time.Tick(9*time.Minute + 30*time.Second)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
