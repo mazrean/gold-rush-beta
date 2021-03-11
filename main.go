@@ -202,6 +202,8 @@ func dig(ctx context.Context, arg *openapi.Dig) {
 	if len(treasures) > 0 {
 		normalChan <- func(treasures []string) func() {
 			return func() {
+				fmt.Printf("insert to cash chan start\n")
+				defer fmt.Printf("insert to cash chan end\n")
 				for _, treasure := range treasures {
 					cashChan <- treasure
 				}
@@ -233,8 +235,8 @@ func license(ctx context.Context, arg []int32) {
 
 	//fmt.Printf("license to channel start\n")
 	normalChan <- func() {
-		//fmt.Printf("insertDig loop start\n")
-		//defer fmt.Printf("insertDig loop end")
+		fmt.Printf("insertDig loop start\n")
+		defer fmt.Printf("insertDig loop end")
 		var digNum int
 		digQueueCheckLocker.Lock()
 		if digQueueLen > int(license.DigAllowed) {
@@ -262,6 +264,8 @@ func explore(ctx context.Context, arg *openapi.Area) {
 	//fmt.Printf("license to channel start\n")
 	normalChan <- func(report *openapi.Report) func() {
 		return func() {
+			fmt.Printf("explore insertDig start\n")
+			defer fmt.Printf("explore insertDig end\n")
 			insertDig(&scheduler.Point{
 				Dig: &openapi.Dig{
 					PosX:  report.Area.PosX,
