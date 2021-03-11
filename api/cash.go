@@ -37,7 +37,7 @@ func Cash(ctx context.Context, treasure string) {
 	for i = 0; ; i++ {
 		startTime := time.Now()
 		coinList, _, err = api.Cash(ctx).Args(treasure).Execute()
-		requestTime := time.Since(startTime).Nanoseconds()
+		requestTime := time.Since(startTime).Milliseconds()
 		cashRequestTimeLocker.Lock()
 		cashRequestTime = append(cashRequestTime, requestTime)
 		cashRequestTimeLocker.Unlock()

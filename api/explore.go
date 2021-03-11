@@ -33,7 +33,7 @@ func Explore(ctx context.Context, area *openapi.Area) *openapi.Report {
 	for i = 0; ; i++ {
 		startTime := time.Now()
 		report, _, err = api.ExploreArea(ctx).Args(*area).Execute()
-		requestTime := time.Since(startTime).Nanoseconds()
+		requestTime := time.Since(startTime).Milliseconds()
 		exploreRequestTimeLocker.Lock()
 		exploreRequestTime = append(exploreRequestTime, requestTime)
 		exploreRequestTimeLocker.Unlock()

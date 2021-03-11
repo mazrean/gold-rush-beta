@@ -48,7 +48,7 @@ func IssueLicense(ctx context.Context, coins []int32) {
 	for i = 0; ; i++ {
 		startTime := time.Now()
 		license, res, err = api.IssueLicense(ctx).Args(coins).Execute()
-		requestTime := time.Since(startTime).Nanoseconds()
+		requestTime := time.Since(startTime).Milliseconds()
 		issueLicenseRequestTimeLocker.Lock()
 		issueLicenseRequestTime = append(issueLicenseRequestTime, requestTime)
 		issueLicenseRequestTimeLocker.Unlock()

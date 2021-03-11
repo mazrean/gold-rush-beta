@@ -45,7 +45,7 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 	for i = 0; ; i++ {
 		startTime := time.Now()
 		treasures, res, err = api.Dig(ctx).Args(*dig).Execute()
-		requestTime := time.Since(startTime).Nanoseconds()
+		requestTime := time.Since(startTime).Milliseconds()
 		digRequestTimeLocker.Lock()
 		digRequestTime[dig.Depth-1] = append(digRequestTime[dig.Depth-1], requestTime)
 		digRequestTimeLocker.Unlock()
