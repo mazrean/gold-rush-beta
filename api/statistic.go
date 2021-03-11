@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func Statistic(sb strings.Builder) {
+func Statistic(sb *strings.Builder) {
 	var aveTreasureNum float64 = 0
 	for _, treasureNum := range digTreasureNum {
 		aveTreasureNum += float64(treasureNum)

@@ -62,7 +62,7 @@ func Pop() *Point {
 	return point
 }
 
-func Statistic(sb strings.Builder) {
+func Statistic(sb *strings.Builder) {
 	var avePushDepth float64 = 0
 	for _, depth := range pushDepth {
 		avePushDepth += float64(depth)

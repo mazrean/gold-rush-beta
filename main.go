@@ -42,7 +42,7 @@ func main() {
 
 func finish() {
 	fmt.Printf("finish called\n")
-	sb := strings.Builder{}
+	sb := &strings.Builder{}
 
 	api.Statistic(sb)
 	scheduler.Statistic(sb)
