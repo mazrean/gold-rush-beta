@@ -161,7 +161,7 @@ func cash(ctx context.Context, arg string) {
 func insertDig(arg *scheduler.Point) {
 	digQueueCheckLocker.Lock()
 	//fmt.Printf("insertDig start\n")
-	defer //fmt.Printf("insertDig end\n")
+	//defer fmt.Printf("insertDig end\n")
 	if isDigQueued {
 		//fmt.Printf("queued\n")
 		digQueueCheckLocker.Unlock()
@@ -211,7 +211,7 @@ func dig(ctx context.Context, arg *openapi.Dig) {
 
 func insertLicense() {
 	//fmt.Printf("insertLicense start\n")
-	defer //fmt.Printf("insertLicense end\n")
+	//defer fmt.Printf("insertLicense end\n")
 	coins := api.PreserveCoin(coinUses[int(time.Since(startTime).Minutes())])
 	//fmt.Printf("coins:%+v\n", coins)
 	licenseChan <- coins
@@ -220,7 +220,7 @@ func insertLicense() {
 
 func license(ctx context.Context, arg []int32) {
 	//fmt.Printf("license start\n")
-	defer //fmt.Printf("license end\n")
+	//defer fmt.Printf("license end\n")
 	license := api.IssueLicense(ctx, arg)
 	//fmt.Printf("license:%+v\n", license)
 	digQueueCheckLocker.Lock()
@@ -231,7 +231,7 @@ func license(ctx context.Context, arg []int32) {
 	//fmt.Printf("license to channel start\n")
 	normalChan <- func() {
 		//fmt.Printf("insertDig loop start\n")
-		defer //fmt.Printf("insertDig loop end")
+		//defer fmt.Printf("insertDig loop end")
 		if len(digQueue) > int(license.DigAllowed) {
 			insertLicense()
 		}
@@ -244,7 +244,7 @@ func license(ctx context.Context, arg []int32) {
 
 func explore(ctx context.Context, arg *openapi.Area) {
 	//fmt.Printf("explore start\n")
-	defer //fmt.Printf("explore end\n")
+	//defer fmt.Printf("explore end\n")
 	report := api.Explore(ctx, arg)
 	//fmt.Printf("report:%+v\n", report)
 
