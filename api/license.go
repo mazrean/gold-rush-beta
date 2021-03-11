@@ -62,7 +62,7 @@ func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
 		var apiErr openapi.GenericOpenAPIError
 		ok := errors.As(err, &apiErr)
 		if ok {
-			//fmt.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+			fmt.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 		} else {
 			fmt.Printf("license error:%+v\n", err)
 		}

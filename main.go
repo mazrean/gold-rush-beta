@@ -219,8 +219,8 @@ func insertLicense() {
 }
 
 func license(ctx context.Context, arg []int32) {
-	fmt.Printf("license start")
-	defer fmt.Printf("license end")
+	fmt.Printf("license start\n")
+	defer fmt.Printf("license end\n")
 	license := api.IssueLicense(ctx, arg)
 	fmt.Printf("license:%+v\n", license)
 	digQueueCheckLocker.Lock()
