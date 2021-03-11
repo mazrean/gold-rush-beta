@@ -36,8 +36,10 @@ var (
 	LicenseChan = make(chan int32, 50)
 )
 
-func IssueLicense(ctx context.Context, coins []int32) {
+func (a *API) IssueLicense(ctx context.Context, coins []int32) {
 	atomic.AddInt64(&issueLicenseCalledNum, 1)
+
+	api := a.api
 
 	var (
 		i       int

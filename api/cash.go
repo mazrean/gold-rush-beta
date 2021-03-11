@@ -25,7 +25,7 @@ var (
 	coins       = []int32{}
 )
 
-func Cash(ctx context.Context, treasure string) {
+func (api *API) Cash(ctx context.Context, treasure string) {
 	atomic.AddInt64(&cashCalledNum, 1)
 
 	var (

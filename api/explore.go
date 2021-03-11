@@ -21,8 +21,10 @@ var (
 	exploreRequestTime       = []int64{}
 )
 
-func Explore(ctx context.Context, area *openapi.Area) *openapi.Report {
+func (a *API) Explore(ctx context.Context, area *openapi.Area) *openapi.Report {
 	atomic.AddInt64(&exploreCalledNum, 1)
+
+	api := a.api
 
 	var (
 		i      int

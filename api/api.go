@@ -8,13 +8,12 @@ import (
 	"github.com/mazrean/gold-rush-beta/openapi"
 )
 
-var (
-	client *openapi.APIClient
-	api    *openapi.DefaultApiService
-)
+type API struct {
+	*openapi.DefaultApiService
+}
 
-func Setup() {
-	client = openapi.NewAPIClient(&openapi.Configuration{
+func NewAPI() *API {
+	client := openapi.NewAPIClient(&openapi.Configuration{
 		Servers: openapi.ServerConfigurations{
 			{
 				URL: fmt.Sprintf("http://%s:8000", os.Getenv("ADDRESS")),
@@ -23,5 +22,6 @@ func Setup() {
 		HTTPClient: http.DefaultClient,
 		Debug:      false,
 	})
-	api = client.DefaultApi
+
+	return &API{client.DefaultApi}
 }

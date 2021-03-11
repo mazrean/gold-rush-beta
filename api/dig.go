@@ -33,8 +33,10 @@ var (
 	}
 )
 
-func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
+func (a *API) Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 	atomic.AddInt64(&digCalledNum, 1)
+
+	api := a.api
 
 	var (
 		i         int
