@@ -136,7 +136,7 @@ func schedule(ctx context.Context) {
 					point := scheduler.Pop()
 					point.Dig.LicenseID = licenseID
 					digChan <- point
-					if len(api.LicenseChan)+reserveNum < licenseSub {
+					if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
 						insertLicense()
 					}
 				}
@@ -148,7 +148,7 @@ func schedule(ctx context.Context) {
 					point := scheduler.Pop()
 					point.Dig.LicenseID = licenseID
 					digChan <- point
-					if len(api.LicenseChan)+reserveNum < licenseSub {
+					if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
 						insertLicense()
 					}
 				}
