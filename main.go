@@ -86,6 +86,7 @@ func schedule(ctx context.Context) {
 			for {
 				select {
 				case arg := <-cashChan:
+					fmt.Printf("cash")
 					cash(ctx, arg)
 					continue
 				case <-ctx.Done():
@@ -95,9 +96,11 @@ func schedule(ctx context.Context) {
 
 				select {
 				case arg := <-cashChan:
+					fmt.Printf("cash")
 					cash(ctx, arg)
 					continue
 				case arg := <-licenseChan:
+					fmt.Printf("license")
 					license(ctx, arg)
 					continue
 				case <-ctx.Done():
@@ -106,18 +109,22 @@ func schedule(ctx context.Context) {
 				}
 
 				if scheduler.Len() > 0 {
+					fmt.Printf("dig")
 					dig(ctx, scheduler.Pop().Dig)
 					continue
 				}
 
 				select {
 				case arg := <-cashChan:
+					fmt.Printf("cash")
 					cash(ctx, arg)
 					continue
 				case arg := <-licenseChan:
+					fmt.Printf("license")
 					license(ctx, arg)
 					continue
 				case arg := <-exploreChan:
+					fmt.Printf("explore")
 					explore(ctx, arg)
 				case <-ctx.Done():
 					break SCHEDULER
