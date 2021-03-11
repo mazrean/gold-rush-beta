@@ -87,7 +87,7 @@ func schedule(ctx context.Context) {
 		SCHEDULER:
 			for {
 				//fmt.Printf("loop time:%s\n", time.Now().String())
-				if time.Since(startTime).Minutes() < 2 {
+				if time.Since(startTime).Minutes() < 4 {
 					select {
 					case arg := <-exploreChan:
 						//fmt.Printf("explore\n")
@@ -110,7 +110,7 @@ func schedule(ctx context.Context) {
 
 				select {
 				case arg := <-cashChan:
-					fmt.Printf("cash\n")
+					//fmt.Printf("cash\n")
 					cash(ctx, arg)
 					continue
 				case arg := <-digChan:
