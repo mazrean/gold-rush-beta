@@ -159,38 +159,38 @@ func cash(ctx context.Context, arg string) {
 }
 
 func insertDig(arg *scheduler.Point) {
-	fmt.Printf("insertDig start\n")
-	defer fmt.Printf("insertDig end\n")
+	//fmt.Printf("insertDig start\n")
+	//defer fmt.Printf("insertDig end\n")
 	if arg.Amount == 0 {
 		return
 	}
 
 	digQueueCheckLocker.Lock()
 	if isDigQueued {
-		fmt.Printf("queued\n")
+		//fmt.Printf("queued\n")
 		digQueueLen += 1
 		digQueueCheckLocker.Unlock()
 		digQueue <- arg
-		fmt.Printf("queue setted\n")
+		//fmt.Printf("queue setted\n")
 		return
 	}
 
-	fmt.Printf("preserve license\n")
+	//fmt.Printf("preserve license\n")
 	licenseID, err := api.PreserveLicense()
 	if err != nil {
-		fmt.Printf("cannot preserve license\n")
+		//fmt.Printf("cannot preserve license\n")
 		isDigQueued = true
 		digQueueLen += 1
 		digQueueCheckLocker.Unlock()
 		digQueue <- arg
-		fmt.Printf("queue setted\n")
+		//fmt.Printf("queue setted\n")
 		insertLicense()
-		fmt.Printf("license channel setted\n")
+		//fmt.Printf("license channel setted\n")
 		return
 	}
 	digQueueCheckLocker.Unlock()
 
-	fmt.Printf("licenseID:%d\n", licenseID)
+	//fmt.Printf("licenseID:%d\n", licenseID)
 	arg.Dig.LicenseID = licenseID
 	scheduler.Push(arg)
 }
@@ -205,8 +205,8 @@ func dig(ctx context.Context, arg *scheduler.Point) {
 	if len(treasures) > 0 {
 		normalChan <- func(treasures []string) func() {
 			return func() {
-				fmt.Printf("insert to cash chan start\n")
-				defer fmt.Printf("insert to cash chan end\n")
+				//fmt.Printf("insert to cash chan start\n")
+				//defer fmt.Printf("insert to cash chan end\n")
 				for _, treasure := range treasures {
 					cashChan <- treasure
 				}
@@ -239,8 +239,8 @@ func license(ctx context.Context, arg []int32) {
 
 	//fmt.Printf("license to channel start\n")
 	normalChan <- func() {
-		fmt.Printf("insertDig loop start\n")
-		defer fmt.Printf("insertDig loop end")
+		//fmt.Printf("insertDig loop start\n")
+		//defer fmt.Printf("insertDig loop end")
 		var digNum int
 		digQueueCheckLocker.Lock()
 		if digQueueLen > int(license.DigAllowed) {
@@ -268,8 +268,8 @@ func explore(ctx context.Context, arg *openapi.Area) {
 	//fmt.Printf("license to channel start\n")
 	normalChan <- func(report *openapi.Report) func() {
 		return func() {
-			fmt.Printf("explore insertDig start\n")
-			defer fmt.Printf("explore insertDig end\n")
+			//fmt.Printf("explore insertDig start\n")
+			//defer fmt.Printf("explore insertDig end\n")
 			insertDig(&scheduler.Point{
 				Dig: &openapi.Dig{
 					PosX:  report.Area.PosX,
