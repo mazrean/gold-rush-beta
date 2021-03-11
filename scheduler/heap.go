@@ -8,7 +8,7 @@ type Point struct {
 }
 
 func (p *Point) priority() float64 {
-	return float64(p.Amount)
+	return float64(p.Amount*11 + p.Depth)
 }
 
 type PointHeap []*Point
