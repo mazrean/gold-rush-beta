@@ -61,7 +61,8 @@ var (
 	licenseChan chan []int32
 	exploreChan chan *openapi.Area
 
-	digQueue chan *scheduler.Point
+	digQueue    chan *scheduler.Point
+	digQueueLen int
 
 	normalChan chan func()
 
@@ -164,6 +165,7 @@ func insertDig(arg *scheduler.Point) {
 	//defer fmt.Printf("insertDig end\n")
 	if isDigQueued {
 		//fmt.Printf("queued\n")
+		digQueueLen += 1
 		digQueueCheckLocker.Unlock()
 		digQueue <- arg
 		//fmt.Printf("queue setted\n")
@@ -175,6 +177,7 @@ func insertDig(arg *scheduler.Point) {
 	if err != nil {
 		//fmt.Printf("cannot preserve license\n")
 		isDigQueued = true
+		digQueueLen += 1
 		digQueueCheckLocker.Unlock()
 		digQueue <- arg
 		//fmt.Printf("queue setted\n")
@@ -232,10 +235,18 @@ func license(ctx context.Context, arg []int32) {
 	normalChan <- func() {
 		//fmt.Printf("insertDig loop start\n")
 		//defer fmt.Printf("insertDig loop end")
-		if len(digQueue) > int(license.DigAllowed) {
+		var digNum int
+		digQueueCheckLocker.Lock()
+		if digQueueLen > int(license.DigAllowed) {
+			digNum = int(license.DigAllowed)
 			insertLicense()
+		} else {
+			digNum = digQueueLen
 		}
-		for i := 0; i < int(license.DigAllowed); i++ {
+		digQueueLen -= digNum
+		digQueueCheckLocker.Unlock()
+
+		for i := 0; i < digNum; i++ {
 			insertDig(<-digQueue)
 		}
 	}
