@@ -51,7 +51,7 @@ func Cash(ctx context.Context, treasure string) {
 		if ok {
 			//fmt.Printf("cache error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 		} else {
-			fmt.Println("cache error:", err)
+			fmt.Printf("cache error(%s):%+v\n", treasure, err)
 		}
 	}
 
