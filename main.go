@@ -86,12 +86,14 @@ func schedule(ctx context.Context) {
 		go func() {
 		SCHEDULER:
 			for {
-				fmt.Printf("loop time:%s\n", time.Now().String())
+				//fmt.Printf("loop time:%s\n", time.Now().String())
 				select {
 				case arg := <-cashChan:
 					fmt.Printf("cash\n")
 					cash(ctx, arg)
 					continue
+				case <-ctx.Done():
+					break SCHEDULER
 				default:
 				}
 
