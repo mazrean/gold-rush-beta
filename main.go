@@ -206,6 +206,11 @@ func cash(ctx context.Context, arg string) {
 	api.Cash(ctx, arg)
 }
 
+func insertDig(arg *scheduler.Point) {
+	scheduler.Push(arg)
+	digLicenseChan <- struct{}{}
+}
+
 func dig(ctx context.Context, arg *scheduler.Point) {
 	treasures, err := api.Dig(ctx, arg.Dig)
 	if err != nil {
@@ -214,7 +219,7 @@ func dig(ctx context.Context, arg *scheduler.Point) {
 	}
 
 	arg.Depth++
-	scheduler.Push(arg)
+	insertDig(arg)
 
 	if len(treasures) > 0 {
 		normalChan <- func(treasures []string) func() {
@@ -256,7 +261,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 		return func() {
 			//fmt.Printf("explore insertDig start\n")
 			//defer fmt.Printf("explore insertDig end\n")
-			scheduler.Push(&scheduler.Point{
+			insertDig(&scheduler.Point{
 				Dig: &openapi.Dig{
 					PosX:  report.Area.PosX,
 					PosY:  report.Area.PosY,
@@ -264,7 +269,6 @@ func explore(ctx context.Context, arg *openapi.Area) {
 				},
 				Amount: report.Amount,
 			})
-			digLicenseChan <- struct{}{}
 		}
 	}(report)
 	//fmt.Printf("license to channel end\n")
