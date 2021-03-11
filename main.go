@@ -111,7 +111,7 @@ func schedule(ctx context.Context) {
 
 				if scheduler.Len() > 0 {
 					//fmt.Printf("dig\n")
-					dig(ctx, scheduler.Pop().Dig)
+					dig(ctx, scheduler.Pop())
 					continue
 				}
 
@@ -162,6 +162,10 @@ func cash(ctx context.Context, arg string) {
 func insertDig(arg *scheduler.Point) {
 	fmt.Printf("insertDig start\n")
 	defer fmt.Printf("insertDig end\n")
+	if arg.Amount == 0 {
+		return
+	}
+
 	digQueueCheckLocker.Lock()
 	if isDigQueued {
 		fmt.Printf("queued\n")
@@ -192,8 +196,8 @@ func insertDig(arg *scheduler.Point) {
 	scheduler.Push(arg)
 }
 
-func dig(ctx context.Context, arg *openapi.Dig) {
-	treasures, err := api.Dig(ctx, arg)
+func dig(ctx context.Context, arg *scheduler.Point) {
+	treasures, err := api.Dig(ctx, arg.Dig)
 	if err != nil {
 		//fmt.Printf("failed to dig: %+v", err)
 		return
@@ -211,7 +215,8 @@ func dig(ctx context.Context, arg *openapi.Dig) {
 		}(treasures)
 	}
 
-	scheduler.Push(&scheduler.Point{})
+	arg.Depth++
+	insertDig(arg)
 }
 
 func insertLicense() {
