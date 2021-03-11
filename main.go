@@ -184,6 +184,7 @@ func dig(ctx context.Context, arg *scheduler.Point) {
 	}
 
 	arg.Depth++
+	arg.Amount -= int32(len(treasures))
 	insertDig(arg)
 
 	if len(treasures) > 0 {
