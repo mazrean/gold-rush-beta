@@ -33,12 +33,10 @@ var (
 	issueLicenseRequestTimeLocker = sync.Mutex{}
 	issueLicenseRequestTime       = []int64{}
 
-	licenseLocker          = sync.RWMutex{}
-	remainLicenseNum int32 = 0
-	licenses               = []*openapi.License{}
+	LicenseChan = make(chan int32, 50)
 )
 
-func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
+func IssueLicense(ctx context.Context, coins []int32) {
 	atomic.AddInt64(&issueLicenseCalledNum, 1)
 
 	var (
@@ -77,41 +75,17 @@ func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
 					fmt.Printf("get license error:%+v\n", err)
 				}
 			} else {
-				fmt.Printf("licenses(%+v): %+v\n", licenses, licenseList)
+				fmt.Printf("licenses: %+v\n", licenseList)
 			}
 		}
 	}
 
-	licenseLocker.Lock()
-	remainLicenseNum++
-	licenses = append(licenses, &license)
-	licenseLocker.Unlock()
+	for i := 0; i < int(license.DigAllowed); i++ {
+		LicenseChan <- license.Id
+	}
 
 	licenseMetricsLocker.Lock()
 	coinNumLicenses[len(coins)] = append(coinNumLicenses[len(coins)], int8(license.DigAllowed))
 	issueLicenseRetryNum = append(issueLicenseRetryNum, i)
 	licenseMetricsLocker.Unlock()
-
-	return &license
-}
-
-var (
-	ErrNoLicenseRemain = errors.New("no license remain")
-)
-
-func PreserveLicense() (int32, error) {
-	if remainLicenseNum == 0 {
-		return 0, ErrNoLicenseRemain
-	}
-
-	licenseLocker.Lock()
-	remainLicenseNum--
-	licenses[0].DigUsed++
-	licenseID := licenses[0].Id
-	if licenses[0].DigAllowed == licenses[0].DigUsed {
-		licenses = licenses[1:]
-	}
-	licenseLocker.Unlock()
-
-	return licenseID, nil
 }

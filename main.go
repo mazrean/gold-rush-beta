@@ -53,32 +53,33 @@ const (
 	requestWorkerNum = 4
 	normalWorkerNum  = 2
 	channelBuf       = 100
+	licenseSub       = 3
 )
 
 var (
 	cashChan    chan string
+	digChan     chan *scheduler.Point
 	licenseChan chan []int32
 	exploreChan chan *openapi.Area
 
-	digQueue    chan *scheduler.Point
-	digQueueLen int
+	digLicenseChan chan struct{}
 
 	normalChan chan func()
-
-	digQueueCheckLocker = sync.Mutex{}
-	isDigQueued         = false
 
 	coinUses = [10]int{8, 8, 8, 8, 8, 8, 8, 8, 1, 0}
 )
 
 func schedule(ctx context.Context) {
 	cashChan = make(chan string, channelBuf)
+	digChan = make(chan *scheduler.Point, channelBuf)
 	licenseChan = make(chan []int32, channelBuf)
 	exploreChan = make(chan *openapi.Area, channelBuf)
 
-	digQueue = make(chan *scheduler.Point, channelBuf)
+	digLicenseChan = make(chan struct{}, channelBuf)
 
 	normalChan = make(chan func(), channelBuf)
+
+	insertLicense()
 
 	for i := 0; i < requestWorkerNum; i++ {
 		go func() {
@@ -99,6 +100,22 @@ func schedule(ctx context.Context) {
 					//fmt.Printf("cash\n")
 					cash(ctx, arg)
 					continue
+				case arg := <-digChan:
+					dig(ctx, arg)
+					continue
+				case <-ctx.Done():
+					break SCHEDULER
+				default:
+				}
+
+				select {
+				case arg := <-cashChan:
+					//fmt.Printf("cash\n")
+					cash(ctx, arg)
+					continue
+				case arg := <-digChan:
+					dig(ctx, arg)
+					continue
 				case arg := <-licenseChan:
 					//fmt.Printf("license\n")
 					license(ctx, arg)
@@ -108,16 +125,13 @@ func schedule(ctx context.Context) {
 				default:
 				}
 
-				if scheduler.Len() > 0 {
-					//fmt.Printf("dig\n")
-					dig(ctx, scheduler.Pop())
-					continue
-				}
-
 				select {
 				case arg := <-cashChan:
 					//fmt.Printf("cash\n")
 					cash(ctx, arg)
+					continue
+				case arg := <-digChan:
+					dig(ctx, arg)
 					continue
 				case arg := <-licenseChan:
 					//fmt.Printf("license\n")
@@ -132,6 +146,40 @@ func schedule(ctx context.Context) {
 			}
 		}()
 	}
+
+	go func() {
+	DIG_SCHEDULER:
+		for {
+			select {
+			case <-ctx.Done():
+				break DIG_SCHEDULER
+			case <-digLicenseChan:
+				select {
+				case <-ctx.Done():
+					break DIG_SCHEDULER
+				case licenseID := <-api.LicenseChan:
+					point := scheduler.Pop()
+					point.Dig.LicenseID = licenseID
+					digChan <- point
+					if len(api.LicenseChan) < licenseSub {
+						insertLicense()
+					}
+				}
+			case licenseID := <-api.LicenseChan:
+				select {
+				case <-ctx.Done():
+					break DIG_SCHEDULER
+				case <-digLicenseChan:
+					point := scheduler.Pop()
+					point.Dig.LicenseID = licenseID
+					digChan <- point
+					if len(api.LicenseChan) < licenseSub {
+						insertLicense()
+					}
+				}
+			}
+		}
+	}()
 
 	for i := 0; i < normalWorkerNum; i++ {
 		go func() {
@@ -158,49 +206,15 @@ func cash(ctx context.Context, arg string) {
 	api.Cash(ctx, arg)
 }
 
-func insertDig(arg *scheduler.Point) {
-	//fmt.Printf("insertDig start\n")
-	//defer fmt.Printf("insertDig end\n")
-	if arg.Amount == 0 {
-		return
-	}
-
-	digQueueCheckLocker.Lock()
-	if isDigQueued {
-		//fmt.Printf("queued\n")
-		digQueueLen += 1
-		digQueueCheckLocker.Unlock()
-		digQueue <- arg
-		//fmt.Printf("queue setted\n")
-		return
-	}
-
-	//fmt.Printf("preserve license\n")
-	licenseID, err := api.PreserveLicense()
-	if err != nil {
-		//fmt.Printf("cannot preserve license\n")
-		isDigQueued = true
-		digQueueLen += 1
-		digQueueCheckLocker.Unlock()
-		digQueue <- arg
-		//fmt.Printf("queue setted\n")
-		insertLicense()
-		//fmt.Printf("license channel setted\n")
-		return
-	}
-	digQueueCheckLocker.Unlock()
-
-	//fmt.Printf("licenseID:%d\n", licenseID)
-	arg.Dig.LicenseID = licenseID
-	scheduler.Push(arg)
-}
-
 func dig(ctx context.Context, arg *scheduler.Point) {
 	treasures, err := api.Dig(ctx, arg.Dig)
 	if err != nil {
 		//fmt.Printf("failed to dig: %+v", err)
 		return
 	}
+
+	arg.Depth++
+	scheduler.Push(arg)
 
 	if len(treasures) > 0 {
 		normalChan <- func(treasures []string) func() {
@@ -213,9 +227,6 @@ func dig(ctx context.Context, arg *scheduler.Point) {
 			}
 		}(treasures)
 	}
-
-	arg.Depth++
-	insertDig(arg)
 }
 
 func insertLicense() {
@@ -230,33 +241,8 @@ func insertLicense() {
 func license(ctx context.Context, arg []int32) {
 	//fmt.Printf("license start\n")
 	//defer fmt.Printf("license end\n")
-	license := api.IssueLicense(ctx, arg)
+	api.IssueLicense(ctx, arg)
 	//fmt.Printf("license:%+v\n", license)
-	digQueueCheckLocker.Lock()
-	isDigQueued = false
-	//fmt.Printf("queue finish\n")
-	digQueueCheckLocker.Unlock()
-
-	//fmt.Printf("license to channel start\n")
-	normalChan <- func() {
-		//fmt.Printf("insertDig loop start\n")
-		//defer fmt.Printf("insertDig loop end")
-		var digNum int
-		digQueueCheckLocker.Lock()
-		if digQueueLen > int(license.DigAllowed) {
-			digNum = int(license.DigAllowed)
-			insertLicense()
-		} else {
-			digNum = digQueueLen
-		}
-		digQueueLen -= digNum
-		digQueueCheckLocker.Unlock()
-
-		for i := 0; i < digNum; i++ {
-			insertDig(<-digQueue)
-		}
-	}
-	//fmt.Printf("license to channel end\n")
 }
 
 func explore(ctx context.Context, arg *openapi.Area) {
@@ -270,7 +256,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 		return func() {
 			//fmt.Printf("explore insertDig start\n")
 			//defer fmt.Printf("explore insertDig end\n")
-			insertDig(&scheduler.Point{
+			scheduler.Push(&scheduler.Point{
 				Dig: &openapi.Dig{
 					PosX:  report.Area.PosX,
 					PosY:  report.Area.PosY,
@@ -278,6 +264,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 				},
 				Amount: report.Amount,
 			})
+			digLicenseChan <- struct{}{}
 		}
 	}(report)
 	//fmt.Printf("license to channel end\n")
