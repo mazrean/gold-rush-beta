@@ -57,7 +57,7 @@ const (
 	requestWorkerNum    = 3
 	middleWorkerNum     = 5
 	normalWorkerNum     = 3
-	channelBuf          = 100
+	channelBuf          = 1000
 	licenseSub          = 3
 	exploreSubWorkerNum = 5
 	reserveNum          = 10
