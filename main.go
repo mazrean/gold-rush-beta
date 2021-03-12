@@ -110,7 +110,6 @@ func schedule(ctx context.Context) {
 	}
 
 	for i := 0; i < licenseWorkerNum; i++ {
-		first := true
 		go func() {
 		LICENSE_WORKER:
 			for {
@@ -122,10 +121,6 @@ func schedule(ctx context.Context) {
 						//sem.Acquire(ctx, 1)
 						license(ctx, arg)
 						//sem.Release(1)
-					}
-					if first {
-						first = false
-						digReadyChan <- struct{}{}
 					}
 				} else {
 					select {
@@ -246,12 +241,18 @@ func cash(ctx context.Context, arg string) {
 	api.Cash(ctx, arg)
 }
 
+var first bool = true
+
 func insertDig(arg *scheduler.Point) {
 	if arg.Amount <= 0 {
 		return
 	}
 	//log.Printf("depth:%d", arg.Depth)
 	scheduler.Push(arg)
+	if first {
+		first = false
+		digReadyChan <- struct{}{}
+	}
 	//digLicenseChan <- struct{}{}
 }
 
