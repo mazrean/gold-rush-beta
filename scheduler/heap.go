@@ -9,7 +9,7 @@ type Point struct {
 
 var (
 	depthTimeMap = [10]float64{8, 9, 10, 11, 12, 12.5, 13, 13.5, 14, 14.5}
-	depthCoinMap = [10]float64{0.5, 1, 2, 3, 4.5, 6, 8.5, 11.5, 18, 38}
+	depthCoinMap = [10]float64{0.5, 1, 2, 3, 4, 5, 7.5, 10, 15, 35}
 )
 
 func (p *Point) priority() float64 {
