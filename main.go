@@ -85,7 +85,7 @@ var (
 
 	reservedLicenseNum int32 = 0
 
-	size int32 = 2
+	size int32 = 3
 
 	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6}
 )
