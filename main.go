@@ -12,7 +12,6 @@ import (
 	"github.com/mazrean/gold-rush-beta/api"
 	"github.com/mazrean/gold-rush-beta/openapi"
 	"github.com/mazrean/gold-rush-beta/scheduler"
-	"golang.org/x/sync/semaphore"
 )
 
 var startTime time.Time
@@ -96,14 +95,14 @@ func schedule(ctx context.Context) {
 
 	insertLicense()
 
-	sem := semaphore.NewWeighted(int64(totalWorkerNum))
+	//sem := semaphore.NewWeighted(int64(totalWorkerNum))
 
 	for i := 0; i < exploreWorkerNum; i++ {
 		go func() {
 			for arg := range exploreChan {
-				sem.Acquire(ctx, 1)
+				//sem.Acquire(ctx, 1)
 				explore(ctx, arg)
-				sem.Release(1)
+				//sem.Release(1)
 			}
 		}()
 	}
@@ -117,18 +116,18 @@ func schedule(ctx context.Context) {
 					case <-ctx.Done():
 						break LICENSE_WORKER
 					case arg := <-licenseChan:
-						sem.Acquire(ctx, 1)
+						//sem.Acquire(ctx, 1)
 						license(ctx, arg)
-						sem.Release(1)
+						//sem.Release(1)
 					}
 				} else {
 					select {
 					case <-ctx.Done():
 						break LICENSE_WORKER
 					case arg := <-cashChan:
-						sem.Acquire(ctx, 1)
+						//sem.Acquire(ctx, 1)
 						cash(ctx, arg)
-						sem.Release(1)
+						//sem.Release(1)
 					}
 				}
 			}
@@ -143,9 +142,9 @@ func schedule(ctx context.Context) {
 				case <-ctx.Done():
 					break CASH_WORKER
 				case arg := <-cashChan:
-					sem.Acquire(ctx, 1)
+					//sem.Acquire(ctx, 1)
 					cash(ctx, arg)
-					sem.Release(1)
+					//sem.Release(1)
 				}
 			}
 		}()
@@ -160,18 +159,18 @@ func schedule(ctx context.Context) {
 					case <-ctx.Done():
 						break REQUEST_WORKER
 					case arg := <-digChan:
-						sem.Acquire(ctx, 1)
+						//sem.Acquire(ctx, 1)
 						dig(ctx, arg)
-						sem.Release(1)
+						//sem.Release(1)
 					}
 				} else {
 					select {
 					case <-ctx.Done():
 						break REQUEST_WORKER
 					case arg := <-cashChan:
-						sem.Acquire(ctx, 1)
+						//sem.Acquire(ctx, 1)
 						cash(ctx, arg)
-						sem.Release(1)
+						//sem.Release(1)
 					}
 				}
 			}
