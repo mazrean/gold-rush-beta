@@ -33,7 +33,7 @@ var (
 	issueLicenseRequestTimeLocker = sync.Mutex{}
 	issueLicenseRequestTime       = []int64{}
 
-	LicenseChan = make(chan int32, 30)
+	LicenseChan = make(chan int32, 100)
 )
 
 func IssueLicense(ctx context.Context, coins []int32) {
