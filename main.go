@@ -213,11 +213,19 @@ func schedule(ctx context.Context) {
 			for i := 3500 * k / exploreSubWorkerNum; i < 3500*(k+1)/exploreSubWorkerNum; i += size {
 				var j int32
 				for j = 0; j < 3500; j += size {
+					sizeX := size
+					sizeY := size
+					if i+size > 3500 {
+						sizeX = 3500 - i
+					}
+					if j+size > 3500 {
+						sizeY = 3500 - j
+					}
 					exploreChan <- &openapi.Area{
 						PosX:  i,
 						PosY:  j,
-						SizeX: &size,
-						SizeY: &size,
+						SizeX: &sizeX,
+						SizeY: &sizeY,
 					}
 				}
 			}
