@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -47,12 +46,12 @@ func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
 	var (
 		i       int
 		license openapi.License
-		res     *http.Response
-		err     error
+		//res     *http.Response
+		err error
 	)
 	for i = 0; ; i++ {
 		startTime := time.Now()
-		license, res, err = api.IssueLicense(ctx).Args(coins).Execute()
+		license, _, err = api.IssueLicense(ctx).Args(coins).Execute()
 		requestTime := time.Since(startTime).Milliseconds()
 		issueLicenseRequestTimeLocker.Lock()
 		issueLicenseRequestTime = append(issueLicenseRequestTime, requestTime)
@@ -68,20 +67,6 @@ func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
 			//log.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 		} else {
 			log.Printf("license error:%+v\n", err)
-		}
-		if res != nil && res.StatusCode == 409 {
-			licenseList, _, err := api.ListLicenses(ctx).Execute()
-			if err != nil {
-				var apiErr openapi.GenericOpenAPIError
-				ok := errors.As(err, &apiErr)
-				if ok {
-					log.Printf("get license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
-				} else {
-					log.Printf("get license error:%+v\n", err)
-				}
-			} else {
-				log.Printf("licenses: %+v\n", licenseList)
-			}
 		}
 	}
 
