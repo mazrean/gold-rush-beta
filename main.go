@@ -58,7 +58,7 @@ const (
 	exploreWorkerNum    = 7
 	licenseWorkerNum    = 2
 	digWorkerNum        = 3
-	cashWorkerNum       = 3
+	cashWorkerNum       = 4
 	middleWorkerNum     = 3
 	normalWorkerNum     = 3
 	channelBuf          = 100
