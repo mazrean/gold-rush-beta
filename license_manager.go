@@ -1,14 +1,8 @@
 package main
 
 var (
-	manageChan = make(chan struct{}, 10)
+	manageChan = make(chan struct{}, 100)
 )
-
-func setup() {
-	for i := 0; i < 10; i++ {
-		manageChan <- struct{}{}
-	}
-}
 
 func push() {
 	manageChan <- struct{}{}
