@@ -55,8 +55,8 @@ func finish() {
 const (
 	exploreWorkerNum    = 3
 	requestWorkerNum    = 3
-	middleWorkerNum     = 3
-	normalWorkerNum     = 5
+	middleWorkerNum     = 5
+	normalWorkerNum     = 3
 	channelBuf          = 100
 	licenseSub          = 3
 	exploreSubWorkerNum = 5
@@ -103,8 +103,8 @@ func schedule(ctx context.Context) {
 			for {
 				if time.Since(startTime).Minutes() < 9 {
 					select {
-					case arg := <-licenseChan:
-						license(ctx, arg)
+					case arg := <-digChan:
+						dig(ctx, arg)
 						continue
 					default:
 					}
