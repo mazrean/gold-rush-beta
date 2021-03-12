@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -60,9 +60,9 @@ func IssueLicense(ctx context.Context, coins []int32) {
 		var apiErr openapi.GenericOpenAPIError
 		ok := errors.As(err, &apiErr)
 		if ok {
-			//fmt.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+			//log.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 		} else {
-			fmt.Printf("license error:%+v\n", err)
+			log.Printf("license error:%+v\n", err)
 		}
 		if res != nil && res.StatusCode == 409 {
 			licenseList, _, err := api.ListLicenses(ctx).Execute()
@@ -70,12 +70,12 @@ func IssueLicense(ctx context.Context, coins []int32) {
 				var apiErr openapi.GenericOpenAPIError
 				ok := errors.As(err, &apiErr)
 				if ok {
-					fmt.Printf("get license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+					log.Printf("get license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 				} else {
-					fmt.Printf("get license error:%+v\n", err)
+					log.Printf("get license error:%+v\n", err)
 				}
 			} else {
-				fmt.Printf("licenses: %+v\n", licenseList)
+				log.Printf("licenses: %+v\n", licenseList)
 			}
 		}
 	}

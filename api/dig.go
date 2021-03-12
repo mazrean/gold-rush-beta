@@ -54,13 +54,13 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 			break
 		}
 		if res != nil && res.StatusCode == 404 {
-			//fmt.Printf("dig not found(request:%+v): {requestTime: %d}\n", req, requestTime)
+			//log.Printf("dig not found(request:%+v): {requestTime: %d}\n", req, requestTime)
 
 			treasures = []string{}
 			break
 		}
 		if res != nil && res.StatusCode == 403 {
-			//fmt.Printf("dig not found(request:%+v): {requestTime: %d}\n", req, requestTime)
+			//log.Printf("dig not found(request:%+v): {requestTime: %d}\n", req, requestTime)
 
 			return nil, fmt.Errorf("dig 403 error: %+v", err)
 		}

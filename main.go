@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -42,7 +43,7 @@ func main() {
 }
 
 func finish() {
-	fmt.Printf("finish called\n")
+	log.Printf("finish called\n")
 	sb := &strings.Builder{}
 
 	api.Statistic(sb)
@@ -193,7 +194,7 @@ func insertDig(arg *scheduler.Point) {
 	if arg.Amount <= 0 {
 		return
 	}
-	//fmt.Printf("depth:%d", arg.Depth)
+	//log.Printf("depth:%d", arg.Depth)
 	scheduler.Push(arg)
 	digLicenseChan <- struct{}{}
 }
@@ -201,7 +202,7 @@ func insertDig(arg *scheduler.Point) {
 func dig(ctx context.Context, arg *scheduler.Point) {
 	treasures, err := api.Dig(ctx, arg.Dig)
 	if err != nil {
-		//fmt.Printf("failed to dig: %+v", err)
+		//log.Printf("failed to dig: %+v", err)
 		return
 	}
 
@@ -212,12 +213,12 @@ func dig(ctx context.Context, arg *scheduler.Point) {
 	if len(treasures) > 0 {
 		normalChan <- func(treasures []string) func() {
 			return func() {
-				//fmt.Printf("insert to cash chan start\n")
-				//defer fmt.Printf("insert to cash chan end\n")
+				//log.Printf("insert to cash chan start\n")
+				//defer log.Printf("insert to cash chan end\n")
 				for _, treasure := range treasures {
-					//fmt.Printf("cash channel send start\n")
+					//log.Printf("cash channel send start\n")
 					cashChan <- treasure
-					//fmt.Printf("cash channel send end\n")
+					//log.Printf("cash channel send end\n")
 				}
 			}
 		}(treasures)
@@ -225,34 +226,34 @@ func dig(ctx context.Context, arg *scheduler.Point) {
 }
 
 func insertLicense() {
-	//fmt.Printf("insertLicense start\n")
-	//defer fmt.Printf("insertLicense end\n")
+	//log.Printf("insertLicense start\n")
+	//defer log.Printf("insertLicense end\n")
 	coins := api.PreserveCoin(coinUses[int(time.Since(startTime).Minutes())])
 	atomic.AddInt32(&reservedLicenseNum, reserveNum)
-	//fmt.Printf("coins:%+v\n", coins)
+	//log.Printf("coins:%+v\n", coins)
 	licenseChan <- coins
-	//fmt.Printf("license channel\n")
+	//log.Printf("license channel\n")
 }
 
 func license(ctx context.Context, arg []int32) {
-	//fmt.Printf("license start\n")
-	//defer fmt.Printf("license end\n")
+	//log.Printf("license start\n")
+	//defer log.Printf("license end\n")
 	api.IssueLicense(ctx, arg)
 	atomic.AddInt32(&reservedLicenseNum, -reserveNum)
-	//fmt.Printf("license:%+v\n", license)
+	//log.Printf("license:%+v\n", license)
 }
 
 func explore(ctx context.Context, arg *openapi.Area) {
-	//fmt.Printf("explore start\n")
-	//defer fmt.Printf("explore end\n")
+	//log.Printf("explore start\n")
+	//defer log.Printf("explore end\n")
 	report := api.Explore(ctx, arg)
-	//fmt.Printf("report:%+v\n", report)
+	//log.Printf("report:%+v\n", report)
 
-	//fmt.Printf("license to channel start\n")
+	//log.Printf("license to channel start\n")
 	normalChan <- func(report *openapi.Report) func() {
 		return func() {
-			//fmt.Printf("explore insertDig start\n")
-			//defer fmt.Printf("explore insertDig end\n")
+			//log.Printf("explore insertDig start\n")
+			//defer log.Printf("explore insertDig end\n")
 			insertDig(&scheduler.Point{
 				Dig: &openapi.Dig{
 					PosX:  report.Area.PosX,
@@ -263,5 +264,5 @@ func explore(ctx context.Context, arg *openapi.Area) {
 			})
 		}
 	}(report)
-	//fmt.Printf("license to channel end\n")
+	//log.Printf("license to channel end\n")
 }

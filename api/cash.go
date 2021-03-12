@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -43,15 +44,15 @@ func Cash(ctx context.Context, treasure string) {
 		cashRequestTimeLocker.Unlock()
 
 		if err == nil {
-			//fmt.Printf("cash succeeded\n")
+			//log.Printf("cash succeeded\n")
 			break
 		}
 		var apiErr openapi.GenericOpenAPIError
 		ok := errors.As(err, &apiErr)
 		if ok {
-			//fmt.Printf("cache error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+			//log.Printf("cache error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 		} else {
-			fmt.Printf("cache error(%s):%+v(time:%s)\n", treasure, err, time.Now().String())
+			log.Printf("cache error(%s):%+v(time:%s)\n", treasure, err, time.Now().String())
 		}
 	}
 

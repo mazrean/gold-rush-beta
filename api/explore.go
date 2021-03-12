@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -45,9 +45,9 @@ func Explore(ctx context.Context, area *openapi.Area) *openapi.Report {
 		var apiErr openapi.GenericOpenAPIError
 		ok := errors.As(err, &apiErr)
 		if ok {
-			fmt.Printf("explore error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
+			log.Printf("explore error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
 		} else {
-			fmt.Printf("explore error:%+v\n", err)
+			log.Printf("explore error:%+v\n", err)
 		}
 	}
 
