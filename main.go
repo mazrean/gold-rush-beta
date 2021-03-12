@@ -51,7 +51,7 @@ func finish() {
 
 	log.Println(sb.String())
 	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d\n",
-		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(digReadyChan), len(api.LicenseChan), len(normalChan))
+		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(digLicenseChan), len(api.LicenseChan), len(normalChan))
 }
 
 const (
@@ -74,8 +74,7 @@ var (
 	licenseChan chan []int32
 	exploreChan chan *openapi.Area
 
-	//digLicenseChan chan struct{}
-	digReadyChan chan struct{}
+	digLicenseChan chan struct{}
 
 	normalChan chan func()
 
@@ -90,8 +89,7 @@ func schedule(ctx context.Context) {
 	licenseChan = make(chan []int32, channelBuf)
 	exploreChan = make(chan *openapi.Area, channelBuf)
 
-	//digLicenseChan = make(chan struct{}, channelBuf*100)
-	digReadyChan = make(chan struct{}, channelBuf)
+	digLicenseChan = make(chan struct{}, channelBuf*100)
 
 	normalChan = make(chan func(), channelBuf)
 
@@ -110,7 +108,6 @@ func schedule(ctx context.Context) {
 	}
 
 	for i := 0; i < licenseWorkerNum; i++ {
-		first := true
 		go func() {
 		LICENSE_WORKER:
 			for {
@@ -122,10 +119,6 @@ func schedule(ctx context.Context) {
 						//sem.Acquire(ctx, 1)
 						license(ctx, arg)
 						//sem.Release(1)
-					}
-					if first {
-						first = false
-						digReadyChan <- struct{}{}
 					}
 				} else {
 					select {
@@ -157,6 +150,33 @@ func schedule(ctx context.Context) {
 		}()
 	}
 
+	for i := 0; i < digWorkerNum; i++ {
+		go func() {
+		REQUEST_WORKER:
+			for {
+				if time.Since(startTime) < 9*time.Minute+50*time.Second {
+					select {
+					case <-ctx.Done():
+						break REQUEST_WORKER
+					case arg := <-digChan:
+						//sem.Acquire(ctx, 1)
+						dig(ctx, arg)
+						//sem.Release(1)
+					}
+				} else {
+					select {
+					case <-ctx.Done():
+						break REQUEST_WORKER
+					case arg := <-cashChan:
+						//sem.Acquire(ctx, 1)
+						cash(ctx, arg)
+						//sem.Release(1)
+					}
+				}
+			}
+		}()
+	}
+
 	for i := 0; i < middleWorkerNum; i++ {
 		go func() {
 		DIG_SCHEDULER:
@@ -164,24 +184,29 @@ func schedule(ctx context.Context) {
 				select {
 				case <-ctx.Done():
 					break DIG_SCHEDULER
-				/*case <-digLicenseChan:
-				select {
-				case <-ctx.Done():
-					break DIG_SCHEDULER
-				case licenseID := <-api.LicenseChan:
-					point := scheduler.Pop()
-					point.Dig.LicenseID = licenseID
-					digChan <- point
-					if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
-						insertLicense()
+				case <-digLicenseChan:
+					select {
+					case <-ctx.Done():
+						break DIG_SCHEDULER
+					case licenseID := <-api.LicenseChan:
+						point := scheduler.Pop()
+						point.Dig.LicenseID = licenseID
+						digChan <- point
+						if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
+							insertLicense()
+						}
 					}
-				}*/
 				case licenseID := <-api.LicenseChan:
-					point := scheduler.Pop()
-					point.Dig.LicenseID = licenseID
-					digChan <- point
-					if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
-						insertLicense()
+					select {
+					case <-ctx.Done():
+						break DIG_SCHEDULER
+					case <-digLicenseChan:
+						point := scheduler.Pop()
+						point.Dig.LicenseID = licenseID
+						digChan <- point
+						if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
+							insertLicense()
+						}
 					}
 				}
 			}
@@ -212,34 +237,6 @@ func schedule(ctx context.Context) {
 			}
 		}(k)
 	}
-
-	for i := 0; i < digWorkerNum; i++ {
-		<-digReadyChan
-		go func() {
-		REQUEST_WORKER:
-			for {
-				if time.Since(startTime) < 9*time.Minute+50*time.Second {
-					select {
-					case <-ctx.Done():
-						break REQUEST_WORKER
-					case arg := <-digChan:
-						//sem.Acquire(ctx, 1)
-						dig(ctx, arg)
-						//sem.Release(1)
-					}
-				} else {
-					select {
-					case <-ctx.Done():
-						break REQUEST_WORKER
-					case arg := <-cashChan:
-						//sem.Acquire(ctx, 1)
-						cash(ctx, arg)
-						//sem.Release(1)
-					}
-				}
-			}
-		}()
-	}
 }
 
 func cash(ctx context.Context, arg string) {
@@ -252,7 +249,7 @@ func insertDig(arg *scheduler.Point) {
 	}
 	//log.Printf("depth:%d", arg.Depth)
 	scheduler.Push(arg)
-	//digLicenseChan <- struct{}{}
+	digLicenseChan <- struct{}{}
 }
 
 func dig(ctx context.Context, arg *scheduler.Point) {
