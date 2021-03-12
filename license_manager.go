@@ -5,7 +5,9 @@ var (
 )
 
 func push() {
-	manageChan <- struct{}{}
+	for i := 0; i < 10; i++ {
+		manageChan <- struct{}{}
+	}
 }
 
 func pop() {
