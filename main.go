@@ -55,7 +55,7 @@ func finish() {
 }
 
 const (
-	exploreWorkerNum    = 8
+	exploreWorkerNum    = 5
 	licenseWorkerNum    = 2
 	digWorkerNum        = 4
 	cashWorkerNum       = 5
@@ -192,19 +192,15 @@ func schedule(ctx context.Context) {
 		}()
 	}
 
-	var size int32 = 1
-
 	for k := 0; k < exploreSubWorkerNum; k++ {
 		go func(k int) {
-			for i := 3500 * k / exploreSubWorkerNum; i < 3500*(k+1)/exploreSubWorkerNum; i++ {
-				for j := 0; j < 3500; j++ {
-					exploreChan <- &openapi.Area{
-						PosX:  int32(i),
-						PosY:  int32(j),
-						SizeX: &size,
-						SizeY: &size,
-					}
-				}
+			var sizeX int32 = int32(3500*(k+1)/exploreSubWorkerNum - 3500*k/exploreSubWorkerNum)
+			var sizeY int32 = 3500
+			exploreChan <- &openapi.Area{
+				PosX:  int32(3500 * k / exploreSubWorkerNum),
+				PosY:  int32(0),
+				SizeX: &sizeX,
+				SizeY: &sizeY,
 			}
 		}(k)
 	}
@@ -283,14 +279,48 @@ func explore(ctx context.Context, arg *openapi.Area) {
 		return func() {
 			//log.Printf("explore insertDig start\n")
 			//defer log.Printf("explore insertDig end\n")
-			insertDig(&scheduler.Point{
-				Dig: &openapi.Dig{
-					PosX:  report.Area.PosX,
-					PosY:  report.Area.PosY,
-					Depth: 1,
-				},
-				Amount: report.Amount,
-			})
+			if *report.Area.SizeX == 1 && *report.Area.SizeY == 1 {
+				insertDig(&scheduler.Point{
+					Dig: &openapi.Dig{
+						PosX:  report.Area.PosX,
+						PosY:  report.Area.PosY,
+						Depth: 1,
+					},
+					Amount: report.Amount,
+				})
+			} else if report.Amount > 0 {
+				if *report.Area.SizeX != 1 {
+					sizeX1 := *report.Area.SizeX / 2
+					exploreChan <- &openapi.Area{
+						PosX:  report.Area.PosX,
+						PosY:  report.Area.PosY,
+						SizeX: &sizeX1,
+						SizeY: report.Area.SizeY,
+					}
+					sizeX2 := *report.Area.SizeX - sizeX1
+					exploreChan <- &openapi.Area{
+						PosX:  report.Area.PosX + sizeX1,
+						PosY:  report.Area.PosY,
+						SizeX: &sizeX2,
+						SizeY: report.Area.SizeY,
+					}
+				} else {
+					sizeY1 := *report.Area.SizeY / 2
+					exploreChan <- &openapi.Area{
+						PosX:  report.Area.PosX,
+						PosY:  report.Area.PosY,
+						SizeX: report.Area.SizeX,
+						SizeY: &sizeY1,
+					}
+					sizeY2 := *report.Area.SizeY - sizeY1
+					exploreChan <- &openapi.Area{
+						PosX:  report.Area.PosX,
+						PosY:  report.Area.PosY + sizeY2,
+						SizeX: report.Area.SizeX,
+						SizeY: &sizeY2,
+					}
+				}
+			}
 		}
 	}(report)
 	//log.Printf("license to channel end\n")
