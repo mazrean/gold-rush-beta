@@ -56,6 +56,7 @@ const (
 	digWorkerNum        = 2
 	licenseWorkerNum    = 5
 	cashWorkerNum       = 3
+	middleWorkerNum     = 5
 	normalWorkerNum     = 5
 	channelBuf          = 100
 	licenseSub          = 20
@@ -122,39 +123,41 @@ func schedule(ctx context.Context) {
 		}()
 	}
 
-	go func() {
-	DIG_SCHEDULER:
-		for {
-			select {
-			case <-ctx.Done():
-				break DIG_SCHEDULER
-			case <-digLicenseChan:
-				select {
-				case <-ctx.Done():
-					break DIG_SCHEDULER
-				case licenseID := <-api.LicenseChan:
-					point := scheduler.Pop()
-					point.Dig.LicenseID = licenseID
-					digChan <- point
-					if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
-						insertLicense()
-					}
-				}
-			case licenseID := <-api.LicenseChan:
+	for i := 0; i < middleWorkerNum; i++ {
+		go func() {
+		DIG_SCHEDULER:
+			for {
 				select {
 				case <-ctx.Done():
 					break DIG_SCHEDULER
 				case <-digLicenseChan:
-					point := scheduler.Pop()
-					point.Dig.LicenseID = licenseID
-					digChan <- point
-					if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
-						insertLicense()
+					select {
+					case <-ctx.Done():
+						break DIG_SCHEDULER
+					case licenseID := <-api.LicenseChan:
+						point := scheduler.Pop()
+						point.Dig.LicenseID = licenseID
+						digChan <- point
+						if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
+							insertLicense()
+						}
+					}
+				case licenseID := <-api.LicenseChan:
+					select {
+					case <-ctx.Done():
+						break DIG_SCHEDULER
+					case <-digLicenseChan:
+						point := scheduler.Pop()
+						point.Dig.LicenseID = licenseID
+						digChan <- point
+						if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
+							insertLicense()
+						}
 					}
 				}
 			}
-		}
-	}()
+		}()
+	}
 
 	for i := 0; i < normalWorkerNum; i++ {
 		go func() {
