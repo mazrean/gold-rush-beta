@@ -12,7 +12,7 @@ var (
 )
 
 func (p *Point) priority() float64 {
-	return float64(p.Amount) / ((11 - float64(p.Depth)) * depthTimeMap[p.Depth])
+	return float64(p.Amount) / ((11 - float64(p.Depth)) * depthTimeMap[p.Depth-1])
 }
 
 type PointHeap []*Point
