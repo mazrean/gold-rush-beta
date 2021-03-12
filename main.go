@@ -49,7 +49,9 @@ func finish() {
 	api.Statistic(sb)
 	scheduler.Statistic(sb)
 
-	fmt.Println(sb.String())
+	log.Println(sb.String())
+	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d,normalChan:%d\n",
+		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(digLicenseChan), len(normalChan))
 }
 
 const (
