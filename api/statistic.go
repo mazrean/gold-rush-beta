@@ -29,9 +29,11 @@ func Statistic(sb *strings.Builder) {
 	digDepthCoinMap := [10]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	digDepthDigNumMap := [10]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	for _, treasureDepth := range digTreasureList {
+		cashTreasureCoinLocker.RLock()
 		for _, treasure := range treasureDepth.treasures {
 			digDepthCoinMap[treasureDepth.depth-1] += float64(cashTreasureCoinMap[treasure])
 		}
+		cashTreasureCoinLocker.RUnlock()
 		digDepthDigNumMap[treasureDepth.depth-1]++
 	}
 	for i := range digDepthCoinMap {
