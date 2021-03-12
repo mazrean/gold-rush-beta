@@ -12,6 +12,7 @@ import (
 	"github.com/mazrean/gold-rush-beta/api"
 	"github.com/mazrean/gold-rush-beta/openapi"
 	"github.com/mazrean/gold-rush-beta/scheduler"
+	"golang.org/x/sync/semaphore"
 )
 
 var startTime time.Time
@@ -55,9 +56,11 @@ func finish() {
 }
 
 const (
-	exploreWorkerNum    = 2
+	totalWorkerNum      = 10
+	exploreWorkerNum    = 5
 	licenseWorkerNum    = 1
-	requestWorkerNum    = 3
+	digWorkerNum        = 2
+	cashWorkerNum       = 2
 	middleWorkerNum     = 5
 	normalWorkerNum     = 3
 	channelBuf          = 100
@@ -93,10 +96,14 @@ func schedule(ctx context.Context) {
 
 	insertLicense()
 
+	sem := semaphore.NewWeighted(int64(totalWorkerNum))
+
 	for i := 0; i < exploreWorkerNum; i++ {
 		go func() {
 			for arg := range exploreChan {
+				sem.Acquire(ctx, 1)
 				explore(ctx, arg)
+				sem.Release(1)
 			}
 		}()
 	}
@@ -110,21 +117,41 @@ func schedule(ctx context.Context) {
 					case <-ctx.Done():
 						break LICENSE_WORKER
 					case arg := <-licenseChan:
+						sem.Acquire(ctx, 1)
 						license(ctx, arg)
+						sem.Release(1)
 					}
 				} else {
 					select {
 					case <-ctx.Done():
 						break LICENSE_WORKER
 					case arg := <-cashChan:
+						sem.Acquire(ctx, 1)
 						cash(ctx, arg)
+						sem.Release(1)
 					}
 				}
 			}
 		}()
 	}
 
-	for i := 0; i < requestWorkerNum; i++ {
+	for i := 0; i < cashWorkerNum; i++ {
+		go func() {
+		CASH_WORKER:
+			for {
+				select {
+				case <-ctx.Done():
+					break CASH_WORKER
+				case arg := <-cashChan:
+					sem.Acquire(ctx, 1)
+					cash(ctx, arg)
+					sem.Release(1)
+				}
+			}
+		}()
+	}
+
+	for i := 0; i < digWorkerNum; i++ {
 		go func() {
 		REQUEST_WORKER:
 			for {
@@ -133,14 +160,18 @@ func schedule(ctx context.Context) {
 					case <-ctx.Done():
 						break REQUEST_WORKER
 					case arg := <-digChan:
+						sem.Acquire(ctx, 1)
 						dig(ctx, arg)
+						sem.Release(1)
 					}
 				} else {
 					select {
 					case <-ctx.Done():
 						break REQUEST_WORKER
 					case arg := <-cashChan:
+						sem.Acquire(ctx, 1)
 						cash(ctx, arg)
+						sem.Release(1)
 					}
 				}
 			}
