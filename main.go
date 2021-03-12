@@ -55,10 +55,10 @@ func finish() {
 }
 
 const (
-	totalWorkerNum      = 8
+	totalWorkerNum      = 9
 	exploreWorkerNum    = 3
 	licenseWorkerNum    = 1
-	digWorkerNum        = 2
+	digWorkerNum        = 3
 	cashWorkerNum       = 2
 	middleWorkerNum     = 5
 	normalWorkerNum     = 3
