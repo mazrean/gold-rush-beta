@@ -56,7 +56,6 @@ func finish() {
 
 const (
 	exploreWorkerNum    = 2
-	licenseWorkerNum    = 1
 	requestWorkerNum    = 3
 	middleWorkerNum     = 5
 	normalWorkerNum     = 3
@@ -101,24 +100,20 @@ func schedule(ctx context.Context) {
 		}()
 	}
 
-	for i := 0; i < licenseWorkerNum; i++ {
-		go func() {
-			select {
-			case arg := <-licenseChan:
-				license(ctx, arg)
-			case arg := <-cashChan:
-				cash(ctx, arg)
-			}
-		}()
-	}
-
 	for i := 0; i < requestWorkerNum; i++ {
 		go func() {
-			select {
-			case arg := <-digChan:
-				dig(ctx, arg)
-			case arg := <-cashChan:
-				cash(ctx, arg)
+		REQUEST_WORKER:
+			for {
+				select {
+				case <-ctx.Done():
+					break REQUEST_WORKER
+				case arg := <-licenseChan:
+					license(ctx, arg)
+				case arg := <-digChan:
+					dig(ctx, arg)
+				case arg := <-cashChan:
+					cash(ctx, arg)
+				}
 			}
 		}()
 	}
