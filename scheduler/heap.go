@@ -9,10 +9,11 @@ type Point struct {
 
 var (
 	depthTimeMap = [10]float64{8, 9, 10, 11, 12, 12.5, 13, 13.5, 14, 14.5}
+	depthCoinMap = [10]float64{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 )
 
 func (p *Point) priority() float64 {
-	return float64(p.Amount) / ((11 - float64(p.Depth)) * depthTimeMap[p.Depth-1])
+	return float64(p.Amount) * depthCoinMap[p.Depth-1] / ((11 - float64(p.Depth)) * depthTimeMap[p.Depth-1])
 }
 
 type PointHeap []*Point
