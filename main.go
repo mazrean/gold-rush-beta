@@ -100,60 +100,13 @@ func schedule(ctx context.Context) {
 
 	for i := 0; i < requestWorkerNum; i++ {
 		go func() {
-			for {
-				if time.Since(startTime).Minutes() < 9 {
-					select {
-					case arg := <-digChan:
-						dig(ctx, arg)
-						continue
-					default:
-					}
-
-					select {
-					case arg := <-licenseChan:
-						license(ctx, arg)
-						continue
-					case arg := <-digChan:
-						dig(ctx, arg)
-						continue
-					default:
-					}
-
-					select {
-					case arg := <-licenseChan:
-						license(ctx, arg)
-					case arg := <-digChan:
-						dig(ctx, arg)
-					case arg := <-cashChan:
-						cash(ctx, arg)
-					}
-				} else {
-					select {
-					case arg := <-cashChan:
-						cash(ctx, arg)
-						continue
-					default:
-					}
-
-					select {
-					case arg := <-cashChan:
-						cash(ctx, arg)
-						continue
-					case arg := <-licenseChan:
-						license(ctx, arg)
-						continue
-					default:
-					}
-
-					select {
-					case arg := <-cashChan:
-						cash(ctx, arg)
-					case arg := <-licenseChan:
-						license(ctx, arg)
-					case arg := <-digChan:
-						dig(ctx, arg)
-					}
-				}
+			select {
+			case arg := <-licenseChan:
+				license(ctx, arg)
+			case arg := <-digChan:
+				dig(ctx, arg)
+			case arg := <-cashChan:
+				cash(ctx, arg)
 			}
 		}()
 	}
