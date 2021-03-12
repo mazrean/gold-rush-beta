@@ -55,7 +55,7 @@ func finish() {
 const (
 	exploreWorkerNum    = 3
 	requestWorkerNum    = 3
-	middleWorkerNum     = 1
+	middleWorkerNum     = 3
 	normalWorkerNum     = 5
 	channelBuf          = 100
 	licenseSub          = 3
