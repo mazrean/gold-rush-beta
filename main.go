@@ -110,8 +110,6 @@ func schedule(ctx context.Context) {
 					break LICENSE_WORKER
 				case arg := <-licenseChan:
 					license(ctx, arg)
-				case arg := <-cashChan:
-					cash(ctx, arg)
 				}
 			}
 		}()
