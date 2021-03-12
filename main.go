@@ -293,8 +293,11 @@ func license(ctx context.Context, arg []int32) {
 	//log.Printf("license start\n")
 	//defer log.Printf("license end\n")
 	push()
-	api.IssueLicense(ctx, arg)
+	license := api.IssueLicense(ctx, arg)
 	atomic.AddInt32(&reservedLicenseNum, -reserveNum)
+	for i := 0; i < 10-int(license.DigAllowed); i++ {
+		pop()
+	}
 	//log.Printf("license:%+v\n", license)
 }
 
