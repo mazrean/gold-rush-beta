@@ -54,7 +54,7 @@ func finish() {
 
 const (
 	exploreWorkerNum    = 10
-	digWorkerNum        = 2
+	digWorkerNum        = 5
 	licenseWorkerNum    = 5
 	cashWorkerNum       = 3
 	middleWorkerNum     = 5
