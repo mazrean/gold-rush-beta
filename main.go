@@ -105,11 +105,20 @@ func schedule(ctx context.Context) {
 		go func() {
 		LICENSE_WORKER:
 			for {
-				select {
-				case <-ctx.Done():
-					break LICENSE_WORKER
-				case arg := <-licenseChan:
-					license(ctx, arg)
+				if time.Since(startTime) < 9*time.Minute+50*time.Second {
+					select {
+					case <-ctx.Done():
+						break LICENSE_WORKER
+					case arg := <-licenseChan:
+						license(ctx, arg)
+					}
+				} else {
+					select {
+					case <-ctx.Done():
+						break LICENSE_WORKER
+					case arg := <-cashChan:
+						cash(ctx, arg)
+					}
 				}
 			}
 		}()
@@ -119,13 +128,20 @@ func schedule(ctx context.Context) {
 		go func() {
 		REQUEST_WORKER:
 			for {
-				select {
-				case <-ctx.Done():
-					break REQUEST_WORKER
-				case arg := <-digChan:
-					dig(ctx, arg)
-				case arg := <-cashChan:
-					cash(ctx, arg)
+				if time.Since(startTime) < 9*time.Minute+50*time.Second {
+					select {
+					case <-ctx.Done():
+						break REQUEST_WORKER
+					case arg := <-digChan:
+						dig(ctx, arg)
+					}
+				} else {
+					select {
+					case <-ctx.Done():
+						break REQUEST_WORKER
+					case arg := <-cashChan:
+						cash(ctx, arg)
+					}
 				}
 			}
 		}()
