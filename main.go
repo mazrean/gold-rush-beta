@@ -53,8 +53,8 @@ func finish() {
 }
 
 const (
-	exploreWorkerNum    = 5
-	requestWorkerNum    = 5
+	exploreWorkerNum    = 3
+	requestWorkerNum    = 3
 	middleWorkerNum     = 1
 	normalWorkerNum     = 5
 	channelBuf          = 100
