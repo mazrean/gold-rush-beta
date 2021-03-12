@@ -79,6 +79,8 @@ var (
 
 	reservedLicenseNum int32 = 0
 
+	size int32 = 2
+
 	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6}
 )
 
@@ -192,15 +194,19 @@ func schedule(ctx context.Context) {
 		}()
 	}
 
-	for k := 0; k < exploreSubWorkerNum; k++ {
-		go func(k int) {
-			var sizeX int32 = int32(3500*(k+1)/exploreSubWorkerNum - 3500*k/exploreSubWorkerNum)
-			var sizeY int32 = 3500
-			exploreChan <- &openapi.Area{
-				PosX:  int32(3500 * k / exploreSubWorkerNum),
-				PosY:  int32(0),
-				SizeX: &sizeX,
-				SizeY: &sizeY,
+	var k int32
+	for k = 0; k < exploreSubWorkerNum; k++ {
+		go func(k int32) {
+			for i := 3500 * k / exploreSubWorkerNum; i < 3500*(k+1)/exploreSubWorkerNum; i += size {
+				var j int32
+				for j = 0; j < 3500; j += size {
+					exploreChan <- &openapi.Area{
+						PosX:  i,
+						PosY:  j,
+						SizeX: &size,
+						SizeY: &size,
+					}
+				}
 			}
 		}(k)
 	}
