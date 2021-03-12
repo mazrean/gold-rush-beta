@@ -53,12 +53,10 @@ func finish() {
 }
 
 const (
-	exploreWorkerNum    = 10
-	digWorkerNum        = 5
-	licenseWorkerNum    = 5
-	cashWorkerNum       = 3
-	middleWorkerNum     = 5
-	normalWorkerNum     = 10
+	exploreWorkerNum    = 5
+	requestWorkerNum    = 5
+	middleWorkerNum     = 1
+	normalWorkerNum     = 5
 	channelBuf          = 100
 	licenseSub          = 5
 	exploreSubWorkerNum = 5
@@ -100,26 +98,62 @@ func schedule(ctx context.Context) {
 		}()
 	}
 
-	for i := 0; i < digWorkerNum; i++ {
+	for i := 0; i < requestWorkerNum; i++ {
 		go func() {
-			for arg := range digChan {
-				dig(ctx, arg)
-			}
-		}()
-	}
+			for {
+				if time.Since(startTime).Minutes() < 9 {
+					select {
+					case arg := <-licenseChan:
+						license(ctx, arg)
+						continue
+					default:
+					}
 
-	for i := 0; i < licenseWorkerNum; i++ {
-		go func() {
-			for arg := range licenseChan {
-				license(ctx, arg)
-			}
-		}()
-	}
+					select {
+					case arg := <-licenseChan:
+						license(ctx, arg)
+						continue
+					case arg := <-digChan:
+						dig(ctx, arg)
+						continue
+					default:
+					}
 
-	for i := 0; i < cashWorkerNum; i++ {
-		go func() {
-			for arg := range cashChan {
-				cash(ctx, arg)
+					select {
+					case arg := <-licenseChan:
+						license(ctx, arg)
+					case arg := <-digChan:
+						dig(ctx, arg)
+					case arg := <-cashChan:
+						cash(ctx, arg)
+					}
+				} else {
+					select {
+					case arg := <-cashChan:
+						cash(ctx, arg)
+						continue
+					default:
+					}
+
+					select {
+					case arg := <-cashChan:
+						cash(ctx, arg)
+						continue
+					case arg := <-licenseChan:
+						license(ctx, arg)
+						continue
+					default:
+					}
+
+					select {
+					case arg := <-cashChan:
+						cash(ctx, arg)
+					case arg := <-licenseChan:
+						license(ctx, arg)
+					case arg := <-digChan:
+						dig(ctx, arg)
+					}
+				}
 			}
 		}()
 	}
