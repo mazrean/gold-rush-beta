@@ -262,6 +262,7 @@ func dig(ctx context.Context, arg *scheduler.Point) {
 	arg.Depth++
 	arg.Amount -= int32(len(treasures))
 	insertDig(arg)
+	pop()
 
 	if len(treasures) > 0 {
 		normalChan <- func(treasures []string) func() {
@@ -291,6 +292,7 @@ func insertLicense() {
 func license(ctx context.Context, arg []int32) {
 	//log.Printf("license start\n")
 	//defer log.Printf("license end\n")
+	push()
 	api.IssueLicense(ctx, arg)
 	atomic.AddInt32(&reservedLicenseNum, -reserveNum)
 	//log.Printf("license:%+v\n", license)
