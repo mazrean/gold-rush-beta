@@ -98,7 +98,7 @@ func schedule(ctx context.Context) {
 
 	digLicenseChan = make(chan struct{}, 100000)
 
-	normalChan = make(chan func(), channelBuf)
+	normalChan = make(chan func(), 100000)
 
 	insertLicense()
 
