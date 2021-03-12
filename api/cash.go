@@ -69,13 +69,17 @@ func Cash(ctx context.Context, treasure string) {
 func PreserveCoin(coinNum int) []int32 {
 	var res []int32
 	coinsLocker.Lock()
-	if coinNum <= len(coins) {
-		res = coins[:coinNum]
-		coins = coins[coinNum:]
-	} else {
-		res = coins
-		coins = coins[len(coins):]
+	if coinNum > len(coins) {
+		if len(coins) < 1 {
+			coinNum = 0
+		} else if len(coins) < 6 {
+			coinNum = 1
+		} else {
+			coinNum = 6
+		}
 	}
+	res = coins[:coinNum]
+	coins = coins[coinNum:]
 	coinsLocker.Unlock()
 
 	return res

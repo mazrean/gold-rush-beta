@@ -55,16 +55,15 @@ func finish() {
 }
 
 const (
-	totalWorkerNum      = 9
-	exploreWorkerNum    = 3
+	exploreWorkerNum    = 5
 	licenseWorkerNum    = 1
 	digWorkerNum        = 3
 	cashWorkerNum       = 2
-	middleWorkerNum     = 5
+	middleWorkerNum     = 3
 	normalWorkerNum     = 3
 	channelBuf          = 100
 	licenseSub          = 15
-	exploreSubWorkerNum = 1
+	exploreSubWorkerNum = 3
 	reserveNum          = 10
 )
 
@@ -84,7 +83,7 @@ var (
 )
 
 func schedule(ctx context.Context) {
-	cashChan = make(chan string, channelBuf)
+	cashChan = make(chan string, 100000)
 	digChan = make(chan *scheduler.Point, channelBuf)
 	licenseChan = make(chan []int32, channelBuf)
 	exploreChan = make(chan *openapi.Area, channelBuf)
@@ -109,27 +108,10 @@ func schedule(ctx context.Context) {
 
 	for i := 0; i < licenseWorkerNum; i++ {
 		go func() {
-		LICENSE_WORKER:
 			for {
-				if time.Since(startTime) < 9*time.Minute+50*time.Second {
-					select {
-					case <-ctx.Done():
-						break LICENSE_WORKER
-					case arg := <-licenseChan:
-						//sem.Acquire(ctx, 1)
-						license(ctx, arg)
-						//sem.Release(1)
-					}
-				} else {
-					select {
-					case <-ctx.Done():
-						break LICENSE_WORKER
-					case arg := <-cashChan:
-						//sem.Acquire(ctx, 1)
-						cash(ctx, arg)
-						//sem.Release(1)
-					}
-				}
+				coins := api.PreserveCoin(coinUses[int(time.Since(startTime).Minutes())])
+				atomic.AddInt32(&reservedLicenseNum, reserveNum)
+				license(ctx, coins)
 			}
 		}()
 	}
@@ -154,24 +136,13 @@ func schedule(ctx context.Context) {
 		go func() {
 		REQUEST_WORKER:
 			for {
-				if time.Since(startTime) < 9*time.Minute+50*time.Second {
-					select {
-					case <-ctx.Done():
-						break REQUEST_WORKER
-					case arg := <-digChan:
-						//sem.Acquire(ctx, 1)
-						dig(ctx, arg)
-						//sem.Release(1)
-					}
-				} else {
-					select {
-					case <-ctx.Done():
-						break REQUEST_WORKER
-					case arg := <-cashChan:
-						//sem.Acquire(ctx, 1)
-						cash(ctx, arg)
-						//sem.Release(1)
-					}
+				select {
+				case <-ctx.Done():
+					break REQUEST_WORKER
+				case arg := <-digChan:
+					//sem.Acquire(ctx, 1)
+					dig(ctx, arg)
+					//sem.Release(1)
 				}
 			}
 		}()
@@ -292,12 +263,12 @@ func insertLicense() {
 func license(ctx context.Context, arg []int32) {
 	//log.Printf("license start\n")
 	//defer log.Printf("license end\n")
-	push()
-	license := api.IssueLicense(ctx, arg)
+	push(len(arg))
+	_ = api.IssueLicense(ctx, arg)
 	atomic.AddInt32(&reservedLicenseNum, -reserveNum)
-	for i := 0; i < 10-int(license.DigAllowed); i++ {
+	/*for i := 0; i < 10-int(license.DigAllowed); i++ {
 		pop()
-	}
+	}*/
 	//log.Printf("license:%+v\n", license)
 }
 
