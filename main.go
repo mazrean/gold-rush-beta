@@ -89,7 +89,7 @@ func schedule(ctx context.Context) {
 	licenseChan = make(chan []int32, channelBuf)
 	exploreChan = make(chan *openapi.Area, channelBuf)
 
-	digLicenseChan = make(chan struct{}, channelBuf)
+	digLicenseChan = make(chan struct{}, channelBuf*100)
 
 	normalChan = make(chan func(), channelBuf)
 
