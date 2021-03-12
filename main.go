@@ -53,7 +53,7 @@ func finish() {
 }
 
 const (
-	exploreWorkerNum    = 3
+	exploreWorkerNum    = 2
 	requestWorkerNum    = 3
 	middleWorkerNum     = 5
 	normalWorkerNum     = 3
