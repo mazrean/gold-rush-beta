@@ -50,8 +50,8 @@ func finish() {
 	scheduler.Statistic(sb)
 
 	log.Println(sb.String())
-	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d,normalChan:%d\n",
-		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(digLicenseChan), len(normalChan))
+	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d\n",
+		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(digLicenseChan), len(api.LicenseChan), len(normalChan))
 }
 
 const (
@@ -61,7 +61,7 @@ const (
 	normalWorkerNum     = 3
 	channelBuf          = 100
 	licenseSub          = 3
-	exploreSubWorkerNum = 5
+	exploreSubWorkerNum = 1
 	reserveNum          = 10
 )
 
