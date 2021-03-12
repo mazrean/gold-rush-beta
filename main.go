@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/api"
+	"github.com/mazrean/gold-rush-beta/manager"
 	"github.com/mazrean/gold-rush-beta/openapi"
 	"github.com/mazrean/gold-rush-beta/scheduler"
 )
@@ -67,9 +68,14 @@ const (
 	reserveNum          = 10
 )
 
+type digArg struct {
+	point  *scheduler.Point
+	isLast bool
+}
+
 var (
 	cashChan    chan string
-	digChan     chan *scheduler.Point
+	digChan     chan *digArg
 	licenseChan chan []int32
 	exploreChan chan *openapi.Area
 
@@ -86,7 +92,7 @@ var (
 
 func schedule(ctx context.Context) {
 	cashChan = make(chan string, 100000)
-	digChan = make(chan *scheduler.Point, channelBuf)
+	digChan = make(chan *digArg, channelBuf)
 	licenseChan = make(chan []int32, channelBuf)
 	exploreChan = make(chan *openapi.Area, channelBuf)
 
@@ -143,7 +149,7 @@ func schedule(ctx context.Context) {
 					break REQUEST_WORKER
 				case arg := <-digChan:
 					//sem.Acquire(ctx, 1)
-					dig(ctx, arg)
+					dig(ctx, arg.point, arg.isLast)
 					//sem.Release(1)
 				}
 			}
@@ -161,22 +167,29 @@ func schedule(ctx context.Context) {
 					select {
 					case <-ctx.Done():
 						break DIG_SCHEDULER
-					case licenseID := <-api.LicenseChan:
+					case license := <-api.LicenseChan:
+						licenseID := license.ID
 						point := scheduler.Pop()
 						point.Dig.LicenseID = licenseID
-						digChan <- point
+						digChan <- &digArg{
+							point:  point,
+							isLast: license.IsLast,
+						}
 						if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
 							insertLicense()
 						}
 					}
-				case licenseID := <-api.LicenseChan:
+				case license := <-api.LicenseChan:
 					select {
 					case <-ctx.Done():
 						break DIG_SCHEDULER
 					case <-digLicenseChan:
 						point := scheduler.Pop()
-						point.Dig.LicenseID = licenseID
-						digChan <- point
+						point.Dig.LicenseID = license.ID
+						digChan <- &digArg{
+							point:  point,
+							isLast: license.IsLast,
+						}
 						if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
 							insertLicense()
 						}
@@ -225,13 +238,15 @@ func insertDig(arg *scheduler.Point) {
 	digLicenseChan <- struct{}{}
 }
 
-func dig(ctx context.Context, arg *scheduler.Point) {
+func dig(ctx context.Context, arg *scheduler.Point, isLast bool) {
 	treasures, err := api.Dig(ctx, arg.Dig)
 	if err != nil {
 		//log.Printf("failed to dig: %+v", err)
 		return
 	}
-	pop()
+	if isLast {
+		manager.Pop()
+	}
 
 	arg.Depth++
 	arg.Amount -= int32(len(treasures))
@@ -265,7 +280,7 @@ func insertLicense() {
 func license(ctx context.Context, arg []int32) {
 	//log.Printf("license start\n")
 	//defer log.Printf("license end\n")
-	push(len(arg))
+	manager.Push()
 	_ = api.IssueLicense(ctx, arg)
 	atomic.AddInt32(&reservedLicenseNum, -reserveNum)
 	/*for i := 0; i < 10-int(license.DigAllowed); i++ {

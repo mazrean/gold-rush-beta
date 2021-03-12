@@ -12,6 +12,11 @@ import (
 	"github.com/mazrean/gold-rush-beta/openapi"
 )
 
+type License struct {
+	ID     int32
+	IsLast bool
+}
+
 var (
 	issueLicenseCalledNum int64 = 0
 	licenseMetricsLocker        = sync.RWMutex{}
@@ -33,7 +38,7 @@ var (
 	issueLicenseRequestTimeLocker = sync.Mutex{}
 	issueLicenseRequestTime       = []int64{}
 
-	LicenseChan = make(chan int32, 100)
+	LicenseChan = make(chan *License, 100)
 )
 
 func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
@@ -81,7 +86,10 @@ func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
 	}
 
 	for i := 0; i < int(license.DigAllowed); i++ {
-		LicenseChan <- license.Id
+		LicenseChan <- &License{
+			ID:     license.Id,
+			IsLast: i == int(license.DigAllowed)-1,
+		}
 	}
 
 	licenseMetricsLocker.Lock()
