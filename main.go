@@ -229,11 +229,11 @@ func dig(ctx context.Context, arg *scheduler.Point) {
 		//log.Printf("failed to dig: %+v", err)
 		return
 	}
+	pop()
 
 	arg.Depth++
 	arg.Amount -= int32(len(treasures))
 	insertDig(arg)
-	pop()
 
 	if len(treasures) > 0 {
 		normalChan <- func(treasures []string) func() {
