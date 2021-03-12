@@ -26,6 +26,18 @@ func Statistic(sb *strings.Builder) {
 	}
 	digRetry /= float64(len(digRetryNum))
 
+	digDepthCoinMap := [10]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	digDepthDigNumMap := [10]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	for _, treasureDepth := range digTreasureList {
+		for _, treasure := range treasureDepth.treasures {
+			digDepthCoinMap[treasureDepth.depth-1] += float64(cashTreasureCoinMap[treasure])
+		}
+		digDepthDigNumMap[treasureDepth.depth-1]++
+	}
+	for i := range digDepthCoinMap {
+		digDepthCoinMap[i] /= float64(digDepthDigNumMap[i])
+	}
+
 	var exploreReqTime float64 = 0
 	for _, requestTime := range exploreRequestTime {
 		exploreReqTime += float64(requestTime)
@@ -82,6 +94,7 @@ func Statistic(sb *strings.Builder) {
 		retry num:%g
 		treasure num ave:%g
 		depth-request time: %g,%g,%g,%g,%g,%g,%g,%g,%g,%g
+		depth-coin num: %g,%g,%g,%g,%g,%g,%g,%g,%g,%g
 	explore:
 		called num:%d
 		retry num:%g
@@ -110,6 +123,16 @@ func Statistic(sb *strings.Builder) {
 		digReqTimes[7],
 		digReqTimes[8],
 		digReqTimes[9],
+		digDepthCoinMap[0],
+		digDepthCoinMap[1],
+		digDepthCoinMap[2],
+		digDepthCoinMap[3],
+		digDepthCoinMap[4],
+		digDepthCoinMap[5],
+		digDepthCoinMap[6],
+		digDepthCoinMap[7],
+		digDepthCoinMap[8],
+		digDepthCoinMap[9],
 		exploreCalledNum,
 		exploreRetry,
 		exploreReqTime,

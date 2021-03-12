@@ -11,12 +11,18 @@ import (
 	"github.com/mazrean/gold-rush-beta/openapi"
 )
 
+type treasureDepth struct {
+	depth     int
+	treasures []string
+}
+
 var (
 	digCalledNum int64 = 0
 
 	digMetricsLocker = sync.RWMutex{}
 	digRetryNum      = []int{}
 	digTreasureNum   = []int{}
+	digTreasureList  = []*treasureDepth{}
 
 	digRequestTimeLocker = sync.Mutex{}
 	digRequestTime       = [10][]int64{
@@ -69,6 +75,10 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 	digMetricsLocker.Lock()
 	digRetryNum = append(digRetryNum, i)
 	digTreasureNum = append(digTreasureNum, len(treasures))
+	digTreasureList = append(digTreasureList, &treasureDepth{
+		depth:     int(dig.Depth),
+		treasures: treasures,
+	})
 	digMetricsLocker.Unlock()
 
 	return treasures, nil

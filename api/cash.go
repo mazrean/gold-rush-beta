@@ -15,9 +15,10 @@ import (
 var (
 	cashCalledNum int64 = 0
 
-	cashMetricsLocker = sync.Mutex{}
-	coinNum           = []int{}
-	cashRetryNum      = []int{}
+	cashMetricsLocker   = sync.Mutex{}
+	coinNum             = []int{}
+	cashRetryNum        = []int{}
+	cashTreasureCoinMap = map[string]int{}
 
 	cashRequestTimeLocker = sync.Mutex{}
 	cashRequestTime       = []int64{}
@@ -59,6 +60,7 @@ func Cash(ctx context.Context, treasure string) {
 	cashMetricsLocker.Lock()
 	coinNum = append(coinNum, len(coinList))
 	cashRetryNum = append(cashRetryNum, i)
+	cashTreasureCoinMap[treasure] = len(coinList)
 	cashMetricsLocker.Unlock()
 
 	coinsLocker.Lock()
