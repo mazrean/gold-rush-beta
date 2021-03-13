@@ -62,7 +62,7 @@ const (
 	exploreWorkerNum    = 7 //4はrate limitが厳しい
 	licenseWorkerNum    = 7
 	digWorkerNum        = 10
-	cashWorkerNum       = 6
+	cashWorkerNum       = 8
 	middleWorkerNum     = 3
 	normalWorkerNum     = 7
 	channelBuf          = 100
