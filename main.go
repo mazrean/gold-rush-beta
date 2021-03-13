@@ -65,7 +65,7 @@ const (
 	cashWorkerNum       = 7
 	middleWorkerNum     = 7
 	normalWorkerNum     = 7
-	channelBuf          = 100
+	channelBuf          = 100000
 	licenseSub          = 15
 	exploreSubWorkerNum = 3
 	reserveNum          = 10
@@ -94,14 +94,14 @@ var (
 )
 
 func schedule(ctx context.Context) {
-	cashChan = make(chan string, 100000)
+	cashChan = make(chan string, channelBuf)
 	digChan = make(chan *digArg, channelBuf)
 	licenseChan = make(chan []int32, channelBuf)
 	exploreChan = make(chan struct{}, channelBuf)
 
-	digLicenseChan = make(chan struct{}, 100000)
+	digLicenseChan = make(chan struct{}, channelBuf)
 
-	normalChan = make(chan func(), 100000)
+	normalChan = make(chan func(), channelBuf)
 
 	insertLicense()
 
