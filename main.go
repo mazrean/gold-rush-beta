@@ -64,7 +64,7 @@ const (
 	digWorkerNum        = 7
 	cashWorkerNum       = 7
 	middleWorkerNum     = 7
-	normalWorkerNum     = 60
+	normalWorkerNum     = 30
 	channelBuf          = 100000
 	licenseSub          = 15
 	exploreSubWorkerNum = 3
@@ -97,7 +97,7 @@ func schedule(ctx context.Context) {
 	cashChan = make(chan string, channelBuf)
 	digChan = make(chan *digArg, channelBuf)
 	licenseChan = make(chan []int32, channelBuf)
-	exploreChan = make(chan struct{}, channelBuf)
+	exploreChan = make(chan struct{}, 1000000)
 
 	digLicenseChan = make(chan struct{}, channelBuf)
 
@@ -232,6 +232,7 @@ func schedule(ctx context.Context) {
 							SizeX: &sizeX,
 							SizeY: &sizeY,
 						},
+						Amount: 0.2 * float64(sizeX) * float64(sizeY),
 					})
 					exploreChan <- struct{}{}
 				}
