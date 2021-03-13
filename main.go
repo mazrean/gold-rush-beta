@@ -51,8 +51,8 @@ func finish() {
 	scheduler.Statistic(sb)
 
 	log.Println(sb.String())
-	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d\n",
-		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(digLicenseChan), len(api.LicenseChan), len(normalChan))
+	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,exploreChan2:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d\n",
+		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(exploreChan2), len(digLicenseChan), len(api.LicenseChan), len(normalChan))
 }
 
 const (
@@ -74,10 +74,11 @@ type digArg struct {
 }
 
 var (
-	cashChan    chan string
-	digChan     chan *digArg
-	licenseChan chan []int32
-	exploreChan chan *openapi.Area
+	cashChan     chan string
+	digChan      chan *digArg
+	licenseChan  chan []int32
+	exploreChan  chan *openapi.Area
+	exploreChan2 chan *openapi.Area
 
 	digLicenseChan chan struct{}
 
@@ -95,6 +96,7 @@ func schedule(ctx context.Context) {
 	digChan = make(chan *digArg, channelBuf)
 	licenseChan = make(chan []int32, channelBuf)
 	exploreChan = make(chan *openapi.Area, channelBuf)
+	exploreChan2 = make(chan *openapi.Area, channelBuf)
 
 	digLicenseChan = make(chan struct{}, 100000)
 
@@ -106,9 +108,21 @@ func schedule(ctx context.Context) {
 
 	for i := 0; i < exploreWorkerNum; i++ {
 		go func() {
-			for arg := range exploreChan {
+			for {
 				//sem.Acquire(ctx, 1)
-				explore(ctx, arg)
+				select {
+				case arg := <-exploreChan2:
+					explore(ctx, arg)
+					continue
+				default:
+				}
+
+				select {
+				case arg := <-exploreChan2:
+					explore(ctx, arg)
+				case arg := <-exploreChan:
+					explore(ctx, arg)
+				}
 				//sem.Release(1)
 			}
 		}()
@@ -320,14 +334,14 @@ func explore(ctx context.Context, arg *openapi.Area) {
 			} else if report.Amount > 0 {
 				if *report.Area.SizeX != 1 {
 					sizeX1 := *report.Area.SizeX / 2
-					exploreChan <- &openapi.Area{
+					exploreChan2 <- &openapi.Area{
 						PosX:  report.Area.PosX,
 						PosY:  report.Area.PosY,
 						SizeX: &sizeX1,
 						SizeY: report.Area.SizeY,
 					}
 					sizeX2 := *report.Area.SizeX - sizeX1
-					exploreChan <- &openapi.Area{
+					exploreChan2 <- &openapi.Area{
 						PosX:  report.Area.PosX + sizeX1,
 						PosY:  report.Area.PosY,
 						SizeX: &sizeX2,
@@ -335,14 +349,14 @@ func explore(ctx context.Context, arg *openapi.Area) {
 					}
 				} else {
 					sizeY1 := *report.Area.SizeY / 2
-					exploreChan <- &openapi.Area{
+					exploreChan2 <- &openapi.Area{
 						PosX:  report.Area.PosX,
 						PosY:  report.Area.PosY,
 						SizeX: report.Area.SizeX,
 						SizeY: &sizeY1,
 					}
 					sizeY2 := *report.Area.SizeY - sizeY1
-					exploreChan <- &openapi.Area{
+					exploreChan2 <- &openapi.Area{
 						PosX:  report.Area.PosX,
 						PosY:  report.Area.PosY + sizeY2,
 						SizeX: report.Area.SizeX,
