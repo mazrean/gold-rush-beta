@@ -12,7 +12,8 @@ import (
 	"github.com/mazrean/gold-rush-beta/api"
 	"github.com/mazrean/gold-rush-beta/manager"
 	"github.com/mazrean/gold-rush-beta/openapi"
-	"github.com/mazrean/gold-rush-beta/scheduler"
+	digScheduler "github.com/mazrean/gold-rush-beta/scheduler/dig"
+	exploreScheduler "github.com/mazrean/gold-rush-beta/scheduler/explore"
 )
 
 var startTime time.Time
@@ -21,7 +22,8 @@ func main() {
 	startTime = time.Now()
 
 	api.Setup()
-	scheduler.Setup()
+	digScheduler.Setup()
+	exploreScheduler.Setup()
 
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
@@ -48,15 +50,15 @@ func finish() {
 	sb := &strings.Builder{}
 
 	api.Statistic(sb)
-	scheduler.Statistic(sb)
+	digScheduler.Statistic(sb)
 
 	log.Println(sb.String())
-	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,exploreChan2:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d\n",
-		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(exploreChan2), len(digLicenseChan), len(api.LicenseChan), len(normalChan))
+	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d\n",
+		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(digLicenseChan), len(api.LicenseChan), len(normalChan))
 }
 
 const (
-	exploreWorkerNum    = 5
+	exploreWorkerNum    = 4 //5はrate limitが厳しい
 	licenseWorkerNum    = 4
 	digWorkerNum        = 5
 	cashWorkerNum       = 6
@@ -69,16 +71,15 @@ const (
 )
 
 type digArg struct {
-	point  *scheduler.Point
+	point  *digScheduler.Point
 	isLast bool
 }
 
 var (
-	cashChan     chan string
-	digChan      chan *digArg
-	licenseChan  chan []int32
-	exploreChan  chan *openapi.Area
-	exploreChan2 chan *openapi.Area
+	cashChan    chan string
+	digChan     chan *digArg
+	licenseChan chan []int32
+	exploreChan chan struct{}
 
 	digLicenseChan chan struct{}
 
@@ -86,7 +87,7 @@ var (
 
 	reservedLicenseNum int32 = 0
 
-	size int32 = 3
+	size int32 = 2
 
 	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6}
 )
@@ -95,8 +96,7 @@ func schedule(ctx context.Context) {
 	cashChan = make(chan string, 100000)
 	digChan = make(chan *digArg, channelBuf)
 	licenseChan = make(chan []int32, channelBuf)
-	exploreChan = make(chan *openapi.Area, channelBuf)
-	exploreChan2 = make(chan *openapi.Area, channelBuf)
+	exploreChan = make(chan struct{}, channelBuf)
 
 	digLicenseChan = make(chan struct{}, 100000)
 
@@ -108,21 +108,10 @@ func schedule(ctx context.Context) {
 
 	for i := 0; i < exploreWorkerNum; i++ {
 		go func() {
-			for {
+			for range exploreChan {
 				//sem.Acquire(ctx, 1)
-				select {
-				case arg := <-exploreChan2:
-					explore(ctx, arg)
-					continue
-				default:
-				}
-
-				select {
-				case arg := <-exploreChan2:
-					explore(ctx, arg)
-				case arg := <-exploreChan:
-					explore(ctx, arg)
-				}
+				arg := exploreScheduler.Pop()
+				explore(ctx, arg.Area)
 				//sem.Release(1)
 			}
 		}()
@@ -183,7 +172,7 @@ func schedule(ctx context.Context) {
 						break DIG_SCHEDULER
 					case license := <-api.LicenseChan:
 						licenseID := license.ID
-						point := scheduler.Pop()
+						point := digScheduler.Pop()
 						point.Dig.LicenseID = licenseID
 						digChan <- &digArg{
 							point:  point,
@@ -198,7 +187,7 @@ func schedule(ctx context.Context) {
 					case <-ctx.Done():
 						break DIG_SCHEDULER
 					case <-digLicenseChan:
-						point := scheduler.Pop()
+						point := digScheduler.Pop()
 						point.Dig.LicenseID = license.ID
 						digChan <- &digArg{
 							point:  point,
@@ -235,12 +224,15 @@ func schedule(ctx context.Context) {
 					if j+size > 3500 {
 						sizeY = 3500 - j
 					}
-					exploreChan <- &openapi.Area{
-						PosX:  i,
-						PosY:  j,
-						SizeX: &sizeX,
-						SizeY: &sizeY,
-					}
+					insertExplore(&exploreScheduler.Area{
+						Area: &openapi.Area{
+							PosX:  i,
+							PosY:  j,
+							SizeX: &sizeX,
+							SizeY: &sizeY,
+						},
+						Amount: 1000000000000,
+					})
 				}
 			}
 		}(k)
@@ -251,16 +243,16 @@ func cash(ctx context.Context, arg string) {
 	api.Cash(ctx, arg)
 }
 
-func insertDig(arg *scheduler.Point) {
+func insertDig(arg *digScheduler.Point) {
 	if arg.Amount <= 0 {
 		return
 	}
 	//log.Printf("depth:%d", arg.Depth)
-	scheduler.Push(arg)
+	digScheduler.Push(arg)
 	digLicenseChan <- struct{}{}
 }
 
-func dig(ctx context.Context, arg *scheduler.Point, isLast bool) {
+func dig(ctx context.Context, arg *digScheduler.Point, isLast bool) {
 	treasures, err := api.Dig(ctx, arg.Dig)
 	if err != nil {
 		//log.Printf("failed to dig: %+v", err)
@@ -311,6 +303,14 @@ func license(ctx context.Context, arg []int32) {
 	//log.Printf("license:%+v\n", license)
 }
 
+func insertExplore(arg *exploreScheduler.Area) {
+	if arg.Amount <= 0 {
+		return
+	}
+	exploreScheduler.Push(arg)
+	exploreChan <- struct{}{}
+}
+
 func explore(ctx context.Context, arg *openapi.Area) {
 	//log.Printf("explore start\n")
 	//defer log.Printf("explore end\n")
@@ -323,7 +323,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 			//log.Printf("explore insertDig start\n")
 			//defer log.Printf("explore insertDig end\n")
 			if *report.Area.SizeX == 1 && *report.Area.SizeY == 1 {
-				insertDig(&scheduler.Point{
+				insertDig(&digScheduler.Point{
 					Dig: &openapi.Dig{
 						PosX:  report.Area.PosX,
 						PosY:  report.Area.PosY,
@@ -334,34 +334,46 @@ func explore(ctx context.Context, arg *openapi.Area) {
 			} else if report.Amount > 0 {
 				if *report.Area.SizeX != 1 {
 					sizeX1 := *report.Area.SizeX / 2
-					exploreChan2 <- &openapi.Area{
-						PosX:  report.Area.PosX,
-						PosY:  report.Area.PosY,
-						SizeX: &sizeX1,
-						SizeY: report.Area.SizeY,
-					}
+					insertExplore(&exploreScheduler.Area{
+						Area: &openapi.Area{
+							PosX:  report.Area.PosX,
+							PosY:  report.Area.PosY,
+							SizeX: &sizeX1,
+							SizeY: report.Area.SizeY,
+						},
+						Amount: float64(report.Amount) * float64(sizeX1) / float64(*report.Area.SizeX),
+					})
 					sizeX2 := *report.Area.SizeX - sizeX1
-					exploreChan2 <- &openapi.Area{
-						PosX:  report.Area.PosX + sizeX1,
-						PosY:  report.Area.PosY,
-						SizeX: &sizeX2,
-						SizeY: report.Area.SizeY,
-					}
+					insertExplore(&exploreScheduler.Area{
+						Area: &openapi.Area{
+							PosX:  report.Area.PosX + sizeX1,
+							PosY:  report.Area.PosY,
+							SizeX: &sizeX2,
+							SizeY: report.Area.SizeY,
+						},
+						Amount: float64(report.Amount) * float64(sizeX2) / float64(*report.Area.SizeX),
+					})
 				} else {
 					sizeY1 := *report.Area.SizeY / 2
-					exploreChan2 <- &openapi.Area{
-						PosX:  report.Area.PosX,
-						PosY:  report.Area.PosY,
-						SizeX: report.Area.SizeX,
-						SizeY: &sizeY1,
-					}
+					insertExplore(&exploreScheduler.Area{
+						Area: &openapi.Area{
+							PosX:  report.Area.PosX,
+							PosY:  report.Area.PosY,
+							SizeX: report.Area.SizeX,
+							SizeY: &sizeY1,
+						},
+						Amount: float64(report.Amount) * float64(sizeY1) / float64(*report.Area.SizeY),
+					})
 					sizeY2 := *report.Area.SizeY - sizeY1
-					exploreChan2 <- &openapi.Area{
-						PosX:  report.Area.PosX,
-						PosY:  report.Area.PosY + sizeY2,
-						SizeX: report.Area.SizeX,
-						SizeY: &sizeY2,
-					}
+					insertExplore(&exploreScheduler.Area{
+						Area: &openapi.Area{
+							PosX:  report.Area.PosX,
+							PosY:  report.Area.PosY + sizeY2,
+							SizeX: report.Area.SizeX,
+							SizeY: &sizeY2,
+						},
+						Amount: float64(report.Amount) * float64(sizeY2) / float64(*report.Area.SizeY),
+					})
 				}
 			}
 		}

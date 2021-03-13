@@ -1,4 +1,4 @@
-package scheduler
+package dig
 
 import "github.com/mazrean/gold-rush-beta/openapi"
 

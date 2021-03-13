@@ -1,4 +1,4 @@
-package scheduler
+package explore
 
 import (
 	"container/heap"
@@ -10,64 +10,64 @@ import (
 
 var (
 	heapLocker = sync.Mutex{}
-	ph         = &PointHeap{}
+	ah         = &AreaHeap{}
 
 	pushCalledNum int64 = 0
 	popCalledNum  int64 = 0
 
 	schedulerMetricsLocker = sync.Mutex{}
 	pushPriorities         = []float64{}
-	pushDepth              = []int32{}
-	pushAmount             = []int32{}
+	pushSize               = []int32{}
+	pushAmount             = []float64{}
 	popPriorities          = []float64{}
-	popDepth               = []int32{}
-	popAmount              = []int32{}
+	popSize                = []int32{}
+	popAmount              = []float64{}
 )
 
 func Setup() {
-	heap.Init(ph)
+	heap.Init(ah)
 }
 
 func Len() int {
-	return len(*ph)
+	return len(*ah)
 }
 
-func Push(point *Point) {
+func Push(area *Area) {
 	atomic.AddInt64(&pushCalledNum, 1)
 
 	heapLocker.Lock()
-	heap.Push(ph, point)
+	heap.Push(ah, area)
 	heapLocker.Unlock()
 
 	schedulerMetricsLocker.Lock()
-	pushDepth = append(pushDepth, point.Depth)
-	pushAmount = append(pushAmount, point.Amount)
+	pushSize = append(pushSize, *area.SizeX**area.SizeY)
+	pushAmount = append(pushAmount, area.Amount)
 	schedulerMetricsLocker.Unlock()
 }
 
-func Pop() *Point {
+func Pop() *Area {
 	atomic.AddInt64(&popCalledNum, 1)
 
 	heapLocker.Lock()
-	iPoint := heap.Pop(ph)
+	iArea := heap.Pop(ah)
 	heapLocker.Unlock()
 
-	point := iPoint.(*Point)
+	area := iArea.(*Area)
 
 	schedulerMetricsLocker.Lock()
-	popDepth = append(popDepth, point.Depth)
-	popAmount = append(popAmount, point.Amount)
+	popSize = append(popSize, *area.SizeX**area.SizeY)
+	popAmount = append(popAmount, area.Amount)
 	schedulerMetricsLocker.Unlock()
 
-	return point
+	return area
 }
 
 func Statistic(sb *strings.Builder) {
-	var avePushDepth float64 = 0
-	for _, depth := range pushDepth {
-		avePushDepth += float64(depth)
+	var avePushSize float64 = 0
+	for _, depth := range pushSize {
+		avePushSize += float64(depth)
 	}
-	avePushDepth /= float64(len(pushDepth))
+	avePushSize /= float64(len(pushSize))
 
 	var avePushAmount float64 = 0
 	for _, amount := range pushAmount {
@@ -75,19 +75,19 @@ func Statistic(sb *strings.Builder) {
 	}
 	avePushAmount /= float64(len(pushAmount))
 
-	var avePopDepth float64 = 0
-	for _, depth := range popDepth {
-		avePopDepth += float64(depth)
+	var avePopSize float64 = 0
+	for _, depth := range popSize {
+		avePopSize += float64(depth)
 	}
-	avePopDepth /= float64(len(popDepth))
+	avePopSize /= float64(len(popSize))
 
 	var avePopAmount float64 = 0
 	for _, amount := range popAmount {
-		avePopAmount += float64(amount)
+		avePopAmount += amount
 	}
 	avePopAmount /= float64(len(popAmount))
 
-	sb.WriteString(fmt.Sprintf(`scheduler:
+	sb.WriteString(fmt.Sprintf(`explore scheduler:
 	push:
 		called num:%d
 		depth:%g
@@ -98,10 +98,10 @@ func Statistic(sb *strings.Builder) {
 		amount:%g
 `,
 		pushCalledNum,
-		avePushDepth,
+		avePushSize,
 		avePushAmount,
 		popCalledNum,
-		avePopDepth,
+		avePopSize,
 		avePopAmount,
 	))
 }
