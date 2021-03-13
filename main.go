@@ -58,11 +58,11 @@ func finish() {
 }
 
 const (
-	exploreWorkerNum    = 7 //4はrate limitが厳しい
+	exploreWorkerNum    = 5 //4はrate limitが厳しい
 	licenseWorkerNum    = 7
-	digWorkerNum        = 10
+	digWorkerNum        = 5
 	cashWorkerNum       = 6
-	middleWorkerNum     = 3
+	middleWorkerNum     = 6
 	normalWorkerNum     = 7
 	channelBuf          = 100
 	licenseSub          = 15
@@ -87,7 +87,7 @@ var (
 
 	reservedLicenseNum int32 = 0
 
-	size int32 = 2
+	size int32 = 3
 
 	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6}
 )
