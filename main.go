@@ -225,7 +225,7 @@ func schedule(ctx context.Context) {
 					if j+size > 3500 {
 						sizeY = 3500 - j
 					}
-					insertExplore(&exploreScheduler.Area{
+					exploreScheduler.Push(&exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  i,
 							PosY:  j,
@@ -233,6 +233,7 @@ func schedule(ctx context.Context) {
 							SizeY: &sizeY,
 						},
 					})
+					exploreChan <- struct{}{}
 				}
 			}
 		}(k)
