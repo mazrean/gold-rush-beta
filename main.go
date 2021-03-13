@@ -58,7 +58,7 @@ func finish() {
 }
 
 const (
-	exploreWorkerNum    = 3 //4はrate limitが厳しい
+	exploreWorkerNum    = 4 //4はrate limitが厳しい
 	licenseWorkerNum    = 7
 	digWorkerNum        = 10
 	cashWorkerNum       = 6
@@ -87,7 +87,7 @@ var (
 
 	reservedLicenseNum int32 = 0
 
-	size int32 = 3
+	size int32 = 2
 
 	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6}
 )
