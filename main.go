@@ -64,7 +64,7 @@ const (
 	digWorkerNum        = 7
 	cashWorkerNum       = 7
 	middleWorkerNum     = 7
-	normalWorkerNum     = 30
+	normalWorkerNum     = 5
 	channelBuf          = 100000
 	licenseSub          = 15
 	exploreSubWorkerNum = 3
@@ -84,7 +84,8 @@ var (
 
 	digLicenseChan chan struct{}
 
-	normalChan chan func()
+	normalChan  chan func()
+	normalChan2 chan func()
 
 	reservedLicenseNum int32 = 0
 
@@ -102,6 +103,7 @@ func schedule(ctx context.Context) {
 	digLicenseChan = make(chan struct{}, channelBuf)
 
 	normalChan = make(chan func(), channelBuf)
+	normalChan2 = make(chan func(), channelBuf)
 
 	insertLicense()
 
@@ -205,6 +207,14 @@ func schedule(ctx context.Context) {
 
 	for i := 0; i < normalWorkerNum; i++ {
 		go func() {
+			for fun := range normalChan2 {
+				fun()
+			}
+		}()
+	}
+
+	for i := 0; i < normalWorkerNum; i++ {
+		go func() {
 			for fun := range normalChan {
 				fun()
 			}
@@ -269,7 +279,7 @@ func dig(ctx context.Context, arg *digScheduler.Point, isLast bool) {
 	insertDig(arg)
 
 	if len(treasures) > 0 {
-		normalChan <- func(treasures []string) func() {
+		normalChan2 <- func(treasures []string) func() {
 			return func() {
 				//log.Printf("insert to cash chan start\n")
 				//defer log.Printf("insert to cash chan end\n")
