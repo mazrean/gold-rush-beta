@@ -90,11 +90,11 @@ func Statistic(sb *strings.Builder) {
 	sb.WriteString(fmt.Sprintf(`explore scheduler:
 	push:
 		called num:%d
-		depth:%g
+		size:%g
 		amount:%g
 	pop:
 		called num:%d
-		depth:%g
+		size:%g
 		amount:%g
 `,
 		pushCalledNum,

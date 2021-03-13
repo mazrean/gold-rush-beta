@@ -51,6 +51,7 @@ func finish() {
 
 	api.Statistic(sb)
 	digScheduler.Statistic(sb)
+	exploreScheduler.Statistic(sb)
 
 	log.Println(sb.String())
 	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d\n",
@@ -231,7 +232,6 @@ func schedule(ctx context.Context) {
 							SizeX: &sizeX,
 							SizeY: &sizeY,
 						},
-						Amount: 1000000000000,
 					})
 				}
 			}

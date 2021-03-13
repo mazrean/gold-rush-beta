@@ -13,6 +13,9 @@ var (
 )
 
 func (a *Area) priority() float64 {
+	if a.Amount == 0 {
+		return 1000000000000
+	}
 	return a.Amount / (float64(*a.SizeX) * float64(*a.SizeY))
 }
 
