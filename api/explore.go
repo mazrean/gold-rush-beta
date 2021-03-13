@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -27,12 +28,12 @@ func Explore(ctx context.Context, area *openapi.Area) *openapi.Report {
 	var (
 		i      int
 		report openapi.Report
-		//res    *http.Response
-		err error
+		res    *http.Response
+		err    error
 	)
 	for i = 0; ; i++ {
 		startTime := time.Now()
-		report, _, err = api.ExploreArea(ctx).Args(*area).Execute()
+		report, res, err = api.ExploreArea(ctx).Args(*area).Execute()
 		requestTime := time.Since(startTime).Milliseconds()
 		exploreRequestTimeLocker.Lock()
 		exploreRequestTime = append(exploreRequestTime, requestTime)
@@ -42,6 +43,9 @@ func Explore(ctx context.Context, area *openapi.Area) *openapi.Report {
 			break
 		}
 
+		if res != nil && res.StatusCode == 429 {
+			continue
+		}
 		var apiErr openapi.GenericOpenAPIError
 		ok := errors.As(err, &apiErr)
 		if ok {
