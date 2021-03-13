@@ -59,7 +59,7 @@ func finish() {
 }
 
 const (
-	exploreWorkerNum    = 7 //4はrate limitが厳しい
+	exploreWorkerNum    = 15 //4はrate limitが厳しい
 	licenseWorkerNum    = 7
 	digWorkerNum        = 10
 	cashWorkerNum       = 8
