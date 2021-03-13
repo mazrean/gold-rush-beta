@@ -64,7 +64,7 @@ const (
 	digWorkerNum        = 7
 	cashWorkerNum       = 7
 	middleWorkerNum     = 7
-	normalWorkerNum     = 30
+	normalWorkerNum     = 60
 	channelBuf          = 100000
 	licenseSub          = 15
 	exploreSubWorkerNum = 3
