@@ -37,7 +37,8 @@ var (
 	issueLicenseRequestTimeLocker = sync.Mutex{}
 	issueLicenseRequestTime       = []int64{}
 
-	LicenseChan = make(chan *License, 100)
+	licenseLocker = sync.Mutex{}
+	LicenseChan   = make(chan *License, 100)
 )
 
 func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
@@ -70,12 +71,14 @@ func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
 		}
 	}
 
+	licenseLocker.Lock()
 	for i := 0; i < int(license.DigAllowed); i++ {
 		LicenseChan <- &License{
 			ID:     license.Id,
 			IsLast: i == int(license.DigAllowed)-1,
 		}
 	}
+	licenseLocker.Unlock()
 
 	licenseMetricsLocker.Lock()
 	coinNumLicenses[len(coins)] = append(coinNumLicenses[len(coins)], int8(license.DigAllowed))
