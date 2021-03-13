@@ -88,7 +88,7 @@ var (
 
 	reservedLicenseNum int32 = 0
 
-	size int32 = 2
+	size int32 = 4
 
 	coinUses = [11]int{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6}
 )
@@ -214,10 +214,10 @@ func schedule(ctx context.Context) {
 	var k int32
 	for k = 0; k < exploreSubWorkerNum; k++ {
 		go func(k int32) {
-			for i := 3500 * k / exploreSubWorkerNum; i < 3500*(k+1)/exploreSubWorkerNum; i += size {
+			for i := 3500 * k / exploreSubWorkerNum; i < 3500*(k+1)/exploreSubWorkerNum; i += 1 {
 				var j int32
 				for j = 0; j < 3500; j += size {
-					sizeX := size
+					var sizeX int32 = 1
 					sizeY := size
 					if i+size > 3500 {
 						sizeX = 3500 - i
