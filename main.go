@@ -54,13 +54,13 @@ func finish() {
 	exploreScheduler.Statistic(sb)
 
 	log.Println(sb.String())
-	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d\n,manageChan:%d",
+	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d,manageChan:%d\n",
 		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(digLicenseChan), len(api.LicenseChan), len(normalChan), len(manager.ManageChan))
 }
 
 const (
 	exploreWorkerNum    = 5 //4はrate limitが厳しい
-	licenseWorkerNum    = 3
+	licenseWorkerNum    = 5
 	digWorkerNum        = 7
 	cashWorkerNum       = 7
 	middleWorkerNum     = 7
