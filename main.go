@@ -327,7 +327,9 @@ func insertExplore(arg *exploreScheduler.Area) {
 func explore(ctx context.Context, arg *openapi.Area) {
 	//log.Printf("explore start\n")
 	//defer log.Printf("explore end\n")
-	log.Printf("area: %+v,size:(%d.%d)\n", *arg, *arg.SizeX, *arg.SizeY)
+	if *arg.SizeX == 0 || *arg.SizeY == 0 {
+		log.Printf("area: %+v,size:(%d.%d)\n", *arg, *arg.SizeX, *arg.SizeY)
+	}
 	report := api.Explore(ctx, arg)
 	//log.Printf("report:%+v\n", report)
 
