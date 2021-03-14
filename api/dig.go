@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -66,14 +67,19 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 			treasures = []string{}
 			break
 		}
+		var apiErr openapi.GenericOpenAPIError
 		if res != nil && res.StatusCode == 403 {
 			//log.Printf("dig not found(request:%+v): {requestTime: %d}\n", req, requestTime)
 
-			var apiErr openapi.GenericOpenAPIError
 			if errors.As(err, &apiErr) {
 				return nil, fmt.Errorf("dig 403 error(request:%+v): %+v", *dig, apiErr.Model())
 			}
-			return nil, fmt.Errorf("dig 403 error(request:%+v): %+v", *dig, err)
+			return nil, fmt.Errorf("dig 403 error(request:%+v): %w", *dig, err)
+		}
+		if errors.As(err, &apiErr) {
+			log.Printf("dig error(request:%+v): %+v", *dig, apiErr.Model())
+		} else {
+			log.Printf("dig error(request:%+v): %+v", *dig, err)
 		}
 	}
 
