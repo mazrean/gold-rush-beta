@@ -259,7 +259,7 @@ func insertDig(arg *digScheduler.Point) {
 	if arg.Amount <= 0 {
 		return
 	}
-	//log.Printf("depth:%d", arg.Depth)
+	log.Printf("x:%d,y:%d, depth:%d", arg.PosX, arg.PosY, arg.Depth)
 	digScheduler.Push(arg)
 	digLicenseChan <- struct{}{}
 }
