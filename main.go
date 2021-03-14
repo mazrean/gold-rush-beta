@@ -259,7 +259,7 @@ func insertDig(arg *digScheduler.Point) {
 	if arg.Amount <= 0 {
 		return
 	}
-	log.Printf("x:%d,y:%d, depth:%d", arg.PosX, arg.PosY, arg.Depth)
+	//log.Printf("x:%d,y:%d, depth:%d", arg.PosX, arg.PosY, arg.Depth)
 	digScheduler.Push(arg)
 	digLicenseChan <- struct{}{}
 }
@@ -276,6 +276,7 @@ func dig(ctx context.Context, arg *digScheduler.Point, isLast bool) {
 
 	arg.Depth++
 	arg.Amount -= int32(len(treasures))
+	log.Printf("dig: x:%d,y:%d, depth:%d", arg.PosX, arg.PosY, arg.Depth)
 	insertDig(arg)
 
 	if len(treasures) > 0 {
@@ -335,6 +336,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 			//log.Printf("explore insertDig start\n")
 			//defer log.Printf("explore insertDig end\n")
 			if *report.Area.SizeX == 1 && *report.Area.SizeY == 1 {
+				log.Printf("explore: x:%d,y:%d", arg.PosX, arg.PosY)
 				insertDig(&digScheduler.Point{
 					Dig: &openapi.Dig{
 						PosX:  report.Area.PosX,
