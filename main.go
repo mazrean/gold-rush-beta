@@ -267,7 +267,7 @@ func insertDig(arg *digScheduler.Point) {
 func dig(ctx context.Context, arg *digScheduler.Point, isLast bool) {
 	treasures, err := api.Dig(ctx, arg.Dig)
 	if err != nil {
-		//log.Printf("failed to dig: %+v", err)
+		log.Printf("failed to dig: %+v", err)
 		return
 	}
 	if isLast {
