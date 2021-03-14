@@ -5,6 +5,7 @@ import "github.com/mazrean/gold-rush-beta/openapi"
 type Point struct {
 	*openapi.Dig
 	Amount int32
+	Type   string
 }
 
 var (

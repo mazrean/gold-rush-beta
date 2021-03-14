@@ -65,7 +65,7 @@ const (
 	cashWorkerNum       = 7
 	middleWorkerNum     = 7
 	normalWorkerNum     = 5
-	channelBuf          = 10000
+	channelBuf          = 100000
 	licenseSub          = 15
 	exploreSubWorkerNum = 3
 	reserveNum          = 10
@@ -276,7 +276,7 @@ func dig(ctx context.Context, arg *digScheduler.Point, isLast bool) {
 
 	atomic.AddInt32(&arg.Depth, 1)
 	arg.Amount -= int32(len(treasures))
-	log.Printf("dig: x:%d,y:%d, depth:%d", arg.PosX, arg.PosY, arg.Depth)
+	//log.Printf("dig: x:%d,y:%d, depth:%d", arg.PosX, arg.PosY, arg.Depth)
 	insertDig(arg)
 
 	if len(treasures) > 0 {
@@ -327,16 +327,17 @@ func insertExplore(arg *exploreScheduler.Area) {
 func explore(ctx context.Context, arg *openapi.Area) {
 	//log.Printf("explore start\n")
 	//defer log.Printf("explore end\n")
+	log.Printf("area: %+v\n", *arg)
 	report := api.Explore(ctx, arg)
 	//log.Printf("report:%+v\n", report)
 
 	//log.Printf("license to channel start\n")
-	normalChan <- func(report openapi.Report) func() {
+	normalChan <- func(report *openapi.Report) func() {
 		return func() {
 			//log.Printf("explore insertDig start\n")
 			//defer log.Printf("explore insertDig end\n")
 			if *report.Area.SizeX == 1 && *report.Area.SizeY == 1 {
-				log.Printf("explore: x:%d,y:%d", arg.PosX, arg.PosY)
+				//log.Printf("explore: x:%d,y:%d", arg.PosX, arg.PosY)
 				insertDig(&digScheduler.Point{
 					Dig: &openapi.Dig{
 						PosX:  report.Area.PosX,
@@ -391,6 +392,6 @@ func explore(ctx context.Context, arg *openapi.Area) {
 				}
 			}
 		}
-	}(*report)
+	}(report)
 	//log.Printf("license to channel end\n")
 }
