@@ -327,9 +327,6 @@ func insertExplore(arg *exploreScheduler.Area) {
 func explore(ctx context.Context, arg *openapi.Area) {
 	//log.Printf("explore start\n")
 	//defer log.Printf("explore end\n")
-	if *arg.SizeX == 0 || *arg.SizeY == 0 {
-		log.Printf("area: %+v,size:(%d.%d)\n", *arg, *arg.SizeX, *arg.SizeY)
-	}
 	report := api.Explore(ctx, arg)
 	//log.Printf("report:%+v\n", report)
 
@@ -351,42 +348,46 @@ func explore(ctx context.Context, arg *openapi.Area) {
 			} else if report.Amount > 0 {
 				if *report.Area.SizeX != 1 {
 					sizeX1 := *report.Area.SizeX / 2
+					sizeY1 := *report.Area.SizeY
 					insertExplore(&exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
 							PosY:  report.Area.PosY,
 							SizeX: &sizeX1,
-							SizeY: report.Area.SizeY,
+							SizeY: &sizeY1,
 						},
 						Amount: float64(report.Amount) * float64(sizeX1) / float64(*report.Area.SizeX),
 					})
 					sizeX2 := *report.Area.SizeX - sizeX1
+					sizeY2 := *report.Area.SizeY
 					insertExplore(&exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX + sizeX1,
 							PosY:  report.Area.PosY,
 							SizeX: &sizeX2,
-							SizeY: report.Area.SizeY,
+							SizeY: &sizeY2,
 						},
 						Amount: float64(report.Amount) * float64(sizeX2) / float64(*report.Area.SizeX),
 					})
 				} else {
+					sizeX1 := *report.Area.SizeX
 					sizeY1 := *report.Area.SizeY / 2
 					insertExplore(&exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
 							PosY:  report.Area.PosY,
-							SizeX: report.Area.SizeX,
+							SizeX: &sizeX1,
 							SizeY: &sizeY1,
 						},
 						Amount: float64(report.Amount) * float64(sizeY1) / float64(*report.Area.SizeY),
 					})
+					sizeX2 := *report.Area.SizeX
 					sizeY2 := *report.Area.SizeY - sizeY1
 					insertExplore(&exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
 							PosY:  report.Area.PosY + sizeY2,
-							SizeX: report.Area.SizeX,
+							SizeX: &sizeX2,
 							SizeY: &sizeY2,
 						},
 						Amount: float64(report.Amount) * float64(sizeY2) / float64(*report.Area.SizeY),
