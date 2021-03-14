@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -68,7 +69,11 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 		if res != nil && res.StatusCode == 403 {
 			//log.Printf("dig not found(request:%+v): {requestTime: %d}\n", req, requestTime)
 
-			return nil, fmt.Errorf("dig 403 error: %+v", err)
+			var apiErr openapi.GenericOpenAPIError
+			if errors.As(err, &apiErr) {
+				return nil, fmt.Errorf("dig 403 error(request:%+v): %+v", *dig, apiErr.Model())
+			}
+			return nil, fmt.Errorf("dig 403 error(request:%+v): %+v", *dig, err)
 		}
 	}
 
