@@ -274,7 +274,7 @@ func dig(ctx context.Context, arg *digScheduler.Point, isLast bool) {
 		manager.Pop()
 	}
 
-	arg.Depth++
+	atomic.AddInt32(&arg.Depth, 1)
 	arg.Amount -= int32(len(treasures))
 	log.Printf("dig: x:%d,y:%d, depth:%d", arg.PosX, arg.PosY, arg.Depth)
 	insertDig(arg)
