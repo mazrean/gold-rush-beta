@@ -331,7 +331,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 	//log.Printf("report:%+v\n", report)
 
 	//log.Printf("license to channel start\n")
-	normalChan <- func(report *openapi.Report) func() {
+	normalChan <- func(report openapi.Report) func() {
 		return func() {
 			//log.Printf("explore insertDig start\n")
 			//defer log.Printf("explore insertDig end\n")
@@ -391,6 +391,6 @@ func explore(ctx context.Context, arg *openapi.Area) {
 				}
 			}
 		}
-	}(report)
+	}(*report)
 	//log.Printf("license to channel end\n")
 }
