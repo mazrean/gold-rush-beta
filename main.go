@@ -65,7 +65,7 @@ const (
 	cashWorkerNum       = 7
 	middleWorkerNum     = 7
 	normalWorkerNum     = 5
-	channelBuf          = 1000
+	channelBuf          = 100000
 	exploreSubWorkerNum = 3
 	reserveNum          = 10
 )
