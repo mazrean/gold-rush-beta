@@ -368,7 +368,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 						},
 						Amount: float64(report.Amount) * float64(sizeX2) / float64(*report.Area.SizeX),
 					}
-					log.Printf("explore: %+v(%d,%d),%+v(%d,%d),%+v(%d,%d)\n", *report, *report.Area.SizeX, *report.Area.SizeY, newArea1, *newArea1.Area.SizeX, *newArea1.Area.SizeY, newArea2, *newArea2.Area.SizeX, *newArea2.Area.SizeY)
+					log.Printf("explore: %#v,%#v,%#v\n", *report, newArea1, newArea2)
 					insertExplore(&newArea1)
 					insertExplore(&newArea2)
 				} else {
@@ -392,7 +392,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 						},
 						Amount: float64(report.Amount) * float64(sizeY2) / float64(*report.Area.SizeY),
 					}
-					log.Printf("explore: %+v(%d,%d),%+v(%d,%d),%+v(%d,%d)\n", *report, *report.Area.SizeX, *report.Area.SizeY, newArea1, *newArea1.Area.SizeX, *newArea1.Area.SizeY, newArea2, *newArea2.Area.SizeX, *newArea2.Area.SizeY)
+					log.Printf("explore: %#v,%#v,%#v\n", *report, newArea1, newArea2)
 					insertExplore(&newArea1)
 					insertExplore(&newArea2)
 				}
