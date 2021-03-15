@@ -1,6 +1,11 @@
 package explore
 
-import "github.com/mazrean/gold-rush-beta/openapi"
+import (
+	"math"
+	"time"
+
+	"github.com/mazrean/gold-rush-beta/openapi"
+)
 
 type Area struct {
 	*openapi.Area
@@ -12,11 +17,11 @@ var (
 	depthCoinMap = [10]float64{0.5, 1, 2, 3, 4, 5, 7.5, 10, 15, 35}
 )
 
-func (a *Area) priority() float64 {
+func (a *Area) priority(t *time.Time) float64 {
 	if a.Amount == 0 {
 		return 0.15
 	}
-	return a.Amount / (float64(*a.SizeX) * float64(*a.SizeY))
+	return a.Amount / math.Pow(float64(*a.SizeX)*float64(*a.SizeY), float64(t.Sub(startTime).Minutes()+1))
 }
 
 type AreaHeap []*Area
@@ -24,7 +29,8 @@ type AreaHeap []*Area
 func (ah AreaHeap) Len() int { return len(ah) }
 
 func (ah AreaHeap) Less(i, j int) bool {
-	return ah[i].priority() > ah[j].priority()
+	t := time.Now()
+	return ah[i].priority(&t) > ah[j].priority(&t)
 }
 
 func (ah AreaHeap) Swap(i, j int) { ah[i], ah[j] = ah[j], ah[i] }

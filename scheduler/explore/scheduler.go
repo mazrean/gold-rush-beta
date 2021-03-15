@@ -6,9 +6,11 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 var (
+	startTime  time.Time
 	heapLocker = sync.Mutex{}
 	ah         = &AreaHeap{}
 
@@ -25,6 +27,7 @@ var (
 )
 
 func Setup() {
+	startTime = time.Now()
 	heap.Init(ah)
 }
 
