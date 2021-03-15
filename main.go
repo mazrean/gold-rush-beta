@@ -46,7 +46,7 @@ func main() {
 }
 
 func finish() {
-	log.Printf("finish called\n")
+	//log.Printf("finish called\n")
 	sb := &strings.Builder{}
 
 	api.Statistic(sb)
@@ -98,7 +98,7 @@ func schedule(ctx context.Context) {
 	cashChan = make(chan string, channelBuf)
 	digChan = make(chan *digArg, channelBuf)
 	licenseChan = make(chan []int32, channelBuf)
-	exploreChan = make(chan struct{}, 1000000)
+	exploreChan = make(chan struct{}, 10000000)
 
 	digLicenseChan = make(chan struct{}, channelBuf)
 
@@ -268,7 +268,7 @@ func insertDig(arg *digScheduler.Point) {
 func dig(ctx context.Context, arg *digScheduler.Point, isLast bool) {
 	treasures, err := api.Dig(ctx, arg.Dig)
 	if err != nil {
-		log.Printf("failed to dig: %+v", err)
+		//log.Printf("failed to dig: %+v", err)
 		return
 	}
 	if isLast {
@@ -368,7 +368,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 						},
 						Amount: float64(report.Amount) * float64(sizeX2) / float64(*report.Area.SizeX),
 					}
-					log.Printf("explore: %+v(%d,%d),%+v(%d,%d),%+v(%d,%d)\n", *report, *report.Area.SizeX, *report.Area.SizeY, *newArea1.Area, *newArea1.Area.SizeX, *newArea1.Area.SizeY, *newArea2.Area, *newArea2.Area.SizeX, *newArea2.Area.SizeY)
+					//log.Printf("explore: %+v(%d,%d),%+v(%d,%d),%+v(%d,%d)\n", *report, *report.Area.SizeX, *report.Area.SizeY, *newArea1.Area, *newArea1.Area.SizeX, *newArea1.Area.SizeY, *newArea2.Area, *newArea2.Area.SizeX, *newArea2.Area.SizeY)
 					insertExplore(&newArea1)
 					insertExplore(&newArea2)
 				} else {
@@ -392,7 +392,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 						},
 						Amount: float64(report.Amount) * float64(sizeY2) / float64(*report.Area.SizeY),
 					}
-					log.Printf("explore: %+v(%d,%d),%+v(%d,%d),%+v(%d,%d)\n", *report, *report.Area.SizeX, *report.Area.SizeY, *newArea1.Area, *newArea1.Area.SizeX, *newArea1.Area.SizeY, *newArea2.Area, *newArea2.Area.SizeX, *newArea2.Area.SizeY)
+					//log.Printf("explore: %+v(%d,%d),%+v(%d,%d),%+v(%d,%d)\n", *report, *report.Area.SizeX, *report.Area.SizeY, *newArea1.Area, *newArea1.Area.SizeX, *newArea1.Area.SizeY, *newArea2.Area, *newArea2.Area.SizeX, *newArea2.Area.SizeY)
 					insertExplore(&newArea1)
 					insertExplore(&newArea2)
 				}
