@@ -373,7 +373,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 					insertExplore(&newArea2)
 				} else {
 					sizeY1 := *report.Area.SizeY / 2
-					insertExplore(&exploreScheduler.Area{
+					newArea1 := exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
 							PosY:  report.Area.PosY,
@@ -381,9 +381,9 @@ func explore(ctx context.Context, arg *openapi.Area) {
 							SizeY: &sizeY1,
 						},
 						Amount: float64(report.Amount) * float64(sizeY1) / float64(*report.Area.SizeY),
-					})
+					}
 					sizeY2 := *report.Area.SizeY - sizeY1
-					insertExplore(&exploreScheduler.Area{
+					newArea2 := exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
 							PosY:  report.Area.PosY + sizeY2,
@@ -391,7 +391,9 @@ func explore(ctx context.Context, arg *openapi.Area) {
 							SizeY: &sizeY2,
 						},
 						Amount: float64(report.Amount) * float64(sizeY2) / float64(*report.Area.SizeY),
-					})
+					}
+					insertExplore(&newArea1)
+					insertExplore(&newArea2)
 				}
 			}
 		}
