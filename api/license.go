@@ -2,13 +2,17 @@ package api
 
 import (
 	"context"
-	"errors"
-	"log"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/openapi"
+	"golang.org/x/sync/errgroup"
 )
 
 type License struct {
@@ -40,34 +44,75 @@ var (
 	LicenseChan = make(chan *License, 100)
 )
 
-func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
+func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) {
 	atomic.AddInt64(&issueLicenseCalledNum, 1)
+
+	sb := strings.Builder{}
+	sb.WriteString(baseURL)
+	sb.WriteString("/dig")
+
+	pr, pw := io.Pipe()
+	eg := errgroup.Group{}
+	eg.Go(func() error {
+		defer pw.Close()
+		err := json.NewEncoder(pw).Encode(coins)
+		if err != nil {
+			return fmt.Errorf("failed to encord response body: %w", err)
+		}
+
+		return nil
+	})
+
+	req, err := http.NewRequestWithContext(ctx, "POST", sb.String(), pr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
 
 	var (
 		i       int
 		license openapi.License
 		//res     *http.Response
-		err error
 	)
 	for i = 0; ; i++ {
 		startTime := time.Now()
-		license, _, err = api.IssueLicense(ctx).Args(coins).Execute()
+		res, err := client.Do(req)
 		requestTime := time.Since(startTime).Milliseconds()
+		if err != nil {
+			return nil, fmt.Errorf("failed to do http request: %w", err)
+		}
+		defer res.Body.Close()
+
 		issueLicenseRequestTimeLocker.Lock()
 		issueLicenseRequestTime = append(issueLicenseRequestTime, requestTime)
 		issueLicenseRequestTimeLocker.Unlock()
 
-		if err == nil {
+		if res.StatusCode == 200 {
+			err = json.NewDecoder(res.Body).Decode(&license)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decord response body: %w", err)
+			}
 			break
 		}
 
-		var apiErr openapi.GenericOpenAPIError
-		ok := errors.As(err, &apiErr)
-		if ok {
-			//log.Printf("license error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
-		} else {
-			log.Printf("license error:%+v\n", err)
-		}
+		/*var apiErr openapi.ModelError
+		err = json.NewDecoder(res.Body).Decode(&apiErr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decord response body: %w", err)
+		}*/
+
+		pr, pw := io.Pipe()
+		eg := errgroup.Group{}
+		eg.Go(func() error {
+			defer pw.Close()
+			err := json.NewEncoder(pw).Encode(coins)
+			if err != nil {
+				return fmt.Errorf("failed to encord response body: %w", err)
+			}
+
+			return nil
+		})
+
+		req.Body = io.NopCloser(pr)
 	}
 
 	for i := 0; i < int(license.DigAllowed); i++ {
@@ -82,5 +127,5 @@ func IssueLicense(ctx context.Context, coins []int32) *openapi.License {
 	issueLicenseRetryNum = append(issueLicenseRetryNum, i)
 	licenseMetricsLocker.Unlock()
 
-	return &license
+	return &license, nil
 }

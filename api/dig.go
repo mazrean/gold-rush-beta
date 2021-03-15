@@ -2,15 +2,17 @@ package api
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/openapi"
+	"golang.org/x/sync/errgroup"
 )
 
 type treasureDepth struct {
@@ -44,43 +46,86 @@ var (
 func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 	atomic.AddInt64(&digCalledNum, 1)
 
+	sb := strings.Builder{}
+	sb.WriteString(baseURL)
+	sb.WriteString("/dig")
+
+	pr, pw := io.Pipe()
+	eg := errgroup.Group{}
+	eg.Go(func() error {
+		defer pw.Close()
+		err := json.NewEncoder(pw).Encode(dig)
+		if err != nil {
+			return fmt.Errorf("failed to encord response body: %w", err)
+		}
+
+		return nil
+	})
+
+	req, err := http.NewRequestWithContext(ctx, "POST", sb.String(), pr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+
 	var (
 		i         int
 		treasures []string
-		res       *http.Response
-		err       error
 	)
 	for i = 0; ; i++ {
 		startTime := time.Now()
-		treasures, res, err = api.Dig(ctx).Args(*dig).Execute()
+		res, err := client.Do(req)
 		requestTime := time.Since(startTime).Milliseconds()
+		if err != nil {
+			return nil, fmt.Errorf("failed to do http request: %w", err)
+		}
+		defer res.Body.Close()
+
+		err = eg.Wait()
+		if err != nil {
+			return nil, fmt.Errorf("failed in error group: %w", err)
+		}
+
 		digRequestTimeLocker.Lock()
 		digRequestTime[dig.Depth-1] = append(digRequestTime[dig.Depth-1], requestTime)
 		digRequestTimeLocker.Unlock()
 
-		if err == nil {
+		if res.StatusCode == 200 {
+			err = json.NewDecoder(res.Body).Decode(&treasures)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decord response body: %w", err)
+			}
 			break
 		}
-		if res != nil && res.StatusCode == 404 {
+
+		if res.StatusCode == 404 {
 			//log.Printf("dig not found(request:%+v): {requestTime: %d}\n", req, requestTime)
 
 			treasures = []string{}
 			break
 		}
-		var apiErr openapi.GenericOpenAPIError
-		if res != nil && res.StatusCode == 403 {
-			//log.Printf("dig not found(request:%+v): {requestTime: %d}\n", req, requestTime)
 
-			if errors.As(err, &apiErr) {
-				return nil, fmt.Errorf("dig 403 error(request:%+v): %+v", *dig, apiErr.Model())
+		var apiErr openapi.ModelError
+		err = json.NewDecoder(res.Body).Decode(&apiErr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decord response body: %w", err)
+		}
+		if res.StatusCode == 403 {
+			//log.Printf("dig not found(request:%+v): {requestTime: %d}\n", req, requestTime)
+			return nil, fmt.Errorf("dig 403 error(request:%+v): %+v", *dig, apiErr)
+		}
+		//log.Printf("dig error(request:%+v): %+v", *dig, apiErr)
+		pr, pw := io.Pipe()
+		eg := errgroup.Group{}
+		eg.Go(func() error {
+			defer pw.Close()
+			err := json.NewEncoder(pw).Encode(dig)
+			if err != nil {
+				return fmt.Errorf("failed to encord response body: %w", err)
 			}
-			return nil, fmt.Errorf("dig 403 error(request:%+v): %w", *dig, err)
-		}
-		if errors.As(err, &apiErr) {
-			log.Printf("dig error(request:%+v): %+v", *dig, apiErr.Model())
-		} else {
-			log.Printf("dig error(request:%+v): %+v", *dig, err)
-		}
+
+			return nil
+		})
+		req.Body = io.NopCloser(pr)
 	}
 
 	digMetricsLocker.Lock()

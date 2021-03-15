@@ -21,7 +21,6 @@ var startTime time.Time
 func main() {
 	startTime = time.Now()
 
-	api.Setup()
 	digScheduler.Setup()
 	exploreScheduler.Setup()
 
@@ -287,7 +286,10 @@ func license(ctx context.Context, arg []int32) {
 	//log.Printf("license start\n")
 	//defer log.Printf("license end\n")
 	manager.Push()
-	_ = api.IssueLicense(ctx, arg)
+	_, err := api.IssueLicense(ctx, arg)
+	if err != nil {
+		log.Printf("license error:%+v\n", err)
+	}
 	atomic.AddInt32(&reservedLicenseNum, -reserveNum)
 	/*for i := 0; i < 10-int(license.DigAllowed); i++ {
 		pop()
@@ -306,7 +308,10 @@ func insertExplore(arg *exploreScheduler.Area) {
 func explore(ctx context.Context, arg *openapi.Area) {
 	//log.Printf("explore start\n")
 	//defer log.Printf("explore end\n")
-	report := api.Explore(ctx, arg)
+	report, err := api.Explore(ctx, arg)
+	if err != nil {
+		log.Printf("explore error:%+v\n", err)
+	}
 	//log.Printf("report:%+v\n", report)
 
 	//log.Printf("license to channel start\n")

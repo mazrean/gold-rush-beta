@@ -2,14 +2,14 @@ package api
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
-	"log"
+	"io"
+	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/mazrean/gold-rush-beta/openapi"
 )
 
 var (
@@ -29,34 +29,50 @@ var (
 	coins       = []int32{}
 )
 
-func Cash(ctx context.Context, treasure string) {
+func Cash(ctx context.Context, treasure string) error {
 	atomic.AddInt64(&cashCalledNum, 1)
+
+	sb := strings.Builder{}
+	sb.WriteString(baseURL)
+	sb.WriteString("/cash")
+	body := fmt.Sprintf(`"%s"`, treasure)
+	req, err := http.NewRequestWithContext(ctx, "POST", sb.String(), strings.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("failed to make request: %w", err)
+	}
 
 	var (
 		i        int
 		coinList []int32
 		//res      *http.Response
-		err error
 	)
 	for i = 0; ; i++ {
 		startTime := time.Now()
-		coinList, _, err = api.Cash(ctx).Args(fmt.Sprintf(`"%s"`, treasure)).Execute()
+		res, err := client.Do(req)
 		requestTime := time.Since(startTime).Milliseconds()
+		if err != nil {
+			return fmt.Errorf("failed to do http request: %w", err)
+		}
+		defer res.Body.Close()
+
 		cashRequestTimeLocker.Lock()
 		cashRequestTime = append(cashRequestTime, requestTime)
 		cashRequestTimeLocker.Unlock()
 
-		if err == nil {
-			//log.Printf("cash succeeded\n")
+		if res.StatusCode == 200 {
+			err = json.NewDecoder(res.Body).Decode(&coinList)
+			if err != nil {
+				return fmt.Errorf("failed to decord response body: %w", err)
+			}
 			break
 		}
-		var apiErr openapi.GenericOpenAPIError
-		ok := errors.As(err, &apiErr)
-		if ok {
-			//log.Printf("cache error(%s):%+v\n", apiErr.Error(), apiErr.Model().(openapi.ModelError))
-		} else {
-			log.Printf("cache error(%s):%+v(time:%s)\n", treasure, err, time.Now().String())
-		}
+		/*var apiErr openapi.ModelError
+		err = json.NewDecoder(res.Body).Decode(&apiErr)
+		if err != nil {
+			return fmt.Errorf("failed to decord response body: %w", err)
+		}*/
+		req.Body = io.NopCloser(strings.NewReader(body))
+		//log.Printf("cache error(%s):%+v\n", res.StatusCode, apiErr)
 	}
 
 	cashMetricsLocker.Lock()
@@ -71,6 +87,8 @@ func Cash(ctx context.Context, treasure string) {
 	coinsLocker.Lock()
 	coins = append(coins, coinList...)
 	coinsLocker.Unlock()
+
+	return nil
 }
 
 func PreserveCoin(coinNum int) []int32 {
