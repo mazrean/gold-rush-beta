@@ -349,7 +349,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 			} else if report.Amount > 0 {
 				if *report.Area.SizeX != 1 {
 					sizeX1 := *report.Area.SizeX / 2
-					insertExplore(&exploreScheduler.Area{
+					newArea1 := exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
 							PosY:  report.Area.PosY,
@@ -357,9 +357,9 @@ func explore(ctx context.Context, arg *openapi.Area) {
 							SizeY: report.Area.SizeY,
 						},
 						Amount: float64(report.Amount) * float64(sizeX1) / float64(*report.Area.SizeX),
-					})
+					}
 					sizeX2 := *report.Area.SizeX - sizeX1
-					insertExplore(&exploreScheduler.Area{
+					newArea2 := exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX + sizeX1,
 							PosY:  report.Area.PosY,
@@ -367,7 +367,10 @@ func explore(ctx context.Context, arg *openapi.Area) {
 							SizeY: report.Area.SizeY,
 						},
 						Amount: float64(report.Amount) * float64(sizeX2) / float64(*report.Area.SizeX),
-					})
+					}
+					log.Printf("explore: %+v(%d,%d),%+v(%d,%d),%+v(%d,%d)\n", *report, *report.Area.SizeX, *report.Area.SizeY, newArea1, *newArea1.Area.SizeX, *newArea1.Area.SizeY, newArea2, *newArea2.Area.SizeX, *newArea2.Area.SizeY)
+					insertExplore(&newArea1)
+					insertExplore(&newArea2)
 				} else {
 					sizeY1 := *report.Area.SizeY / 2
 					insertExplore(&exploreScheduler.Area{
