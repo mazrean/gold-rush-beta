@@ -54,8 +54,8 @@ func finish() {
 	exploreScheduler.Statistic(sb)
 
 	log.Println(sb.String())
-	log.Printf("cashChan:%d,digChan:%d,licenseChan:%d,exploreChan:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d,manageChan:%d\n",
-		len(cashChan), len(digChan), len(licenseChan), len(exploreChan), len(digLicenseChan), len(api.LicenseChan), len(normalChan), len(manager.ManageChan))
+	log.Printf("cashChan:%d,digChan:%d,exploreChan:%d,digLicenseChan:%d, api.LicenseChan:%d,normalChan:%d,manageChan:%d\n",
+		len(cashChan), len(digChan), len(exploreChan), len(digLicenseChan), len(api.LicenseChan), len(normalChan), len(manager.ManageChan))
 }
 
 const (
@@ -66,7 +66,6 @@ const (
 	middleWorkerNum     = 7
 	normalWorkerNum     = 5
 	channelBuf          = 1000
-	licenseSub          = 15
 	exploreSubWorkerNum = 3
 	reserveNum          = 10
 )
@@ -79,7 +78,6 @@ type digArg struct {
 var (
 	cashChan    chan string
 	digChan     chan *digArg
-	licenseChan chan []int32
 	exploreChan chan struct{}
 
 	digLicenseChan chan struct{}
@@ -97,15 +95,12 @@ var (
 func schedule(ctx context.Context) {
 	cashChan = make(chan string, channelBuf)
 	digChan = make(chan *digArg, channelBuf)
-	licenseChan = make(chan []int32, channelBuf)
 	exploreChan = make(chan struct{}, 10000000)
 
 	digLicenseChan = make(chan struct{}, channelBuf)
 
 	normalChan = make(chan func(), channelBuf)
 	normalChan2 = make(chan func(), channelBuf)
-
-	insertLicense()
 
 	//sem := semaphore.NewWeighted(int64(totalWorkerNum))
 
@@ -124,7 +119,6 @@ func schedule(ctx context.Context) {
 		go func() {
 			for {
 				coins := api.PreserveCoin(coinUses[int(time.Since(startTime).Minutes())])
-				atomic.AddInt32(&reservedLicenseNum, reserveNum)
 				license(ctx, coins)
 			}
 		}()
@@ -181,9 +175,6 @@ func schedule(ctx context.Context) {
 							point:  point,
 							isLast: license.IsLast,
 						}
-						if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
-							insertLicense()
-						}
 					}
 				case license := <-api.LicenseChan:
 					select {
@@ -195,9 +186,6 @@ func schedule(ctx context.Context) {
 						digChan <- &digArg{
 							point:  point,
 							isLast: license.IsLast,
-						}
-						if len(api.LicenseChan)+int(reservedLicenseNum) < licenseSub {
-							insertLicense()
 						}
 					}
 				}
@@ -293,16 +281,6 @@ func dig(ctx context.Context, arg *digScheduler.Point, isLast bool) {
 			}
 		}(treasures)
 	}
-}
-
-func insertLicense() {
-	//log.Printf("insertLicense start\n")
-	//defer log.Printf("insertLicense end\n")
-	coins := api.PreserveCoin(coinUses[int(time.Since(startTime).Minutes())])
-	atomic.AddInt32(&reservedLicenseNum, reserveNum)
-	//log.Printf("coins:%+v\n", coins)
-	licenseChan <- coins
-	//log.Printf("license channel\n")
 }
 
 func license(ctx context.Context, arg []int32) {
