@@ -74,6 +74,7 @@ func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) 
 		//res     *http.Response
 	)
 	for i = 0; ; i++ {
+		pr.Close()
 		startTime := time.Now()
 		res, err := client.Do(req)
 		requestTime := time.Since(startTime).Milliseconds()
@@ -100,7 +101,7 @@ func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) 
 			return nil, fmt.Errorf("failed to decord response body: %w", err)
 		}*/
 
-		pr, pw := io.Pipe()
+		pr, pw = io.Pipe()
 		eg := errgroup.Group{}
 		eg.Go(func() error {
 			defer pw.Close()
@@ -112,7 +113,7 @@ func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) 
 			return nil
 		})
 
-		req.Body = io.NopCloser(pr)
+		req.Body = pr
 	}
 
 	for i := 0; i < int(license.DigAllowed); i++ {
