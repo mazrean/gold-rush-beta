@@ -289,8 +289,9 @@ func license(ctx context.Context, arg []int32) {
 	_, err := api.IssueLicense(ctx, arg)
 	if err != nil {
 		log.Printf("license error:%+v\n", err)
+		return
 	}
-	atomic.AddInt32(&reservedLicenseNum, -reserveNum)
+	//atomic.AddInt32(&reservedLicenseNum, -reserveNum)
 	/*for i := 0; i < 10-int(license.DigAllowed); i++ {
 		pop()
 	}*/
@@ -311,6 +312,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 	report, err := api.Explore(ctx, arg)
 	if err != nil {
 		log.Printf("explore error:%+v\n", err)
+		return
 	}
 	//log.Printf("report:%+v\n", report)
 
