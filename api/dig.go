@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/openapi"
-	"golang.org/x/sync/errgroup"
 )
 
 type treasureDepth struct {
@@ -50,20 +50,13 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 	sb.WriteString(baseURL)
 	sb.WriteString("/dig")
 
-	pr, pw := io.Pipe()
-	eg := errgroup.Group{}
-	eg.Go(func() error {
-		defer pr.Close()
-		defer pw.Close()
-		err := json.NewEncoder(pw).Encode(dig)
-		if err != nil {
-			return fmt.Errorf("failed to encord response body: %w", err)
-		}
+	buf := bytes.Buffer{}
+	err := json.NewEncoder(&buf).Encode(dig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encord response body: %w", err)
+	}
 
-		return nil
-	})
-
-	req, err := http.NewRequestWithContext(ctx, "POST", sb.String(), pr)
+	req, err := http.NewRequestWithContext(ctx, "POST", sb.String(), &buf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
@@ -80,11 +73,6 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 			return nil, fmt.Errorf("failed to do http request: %w", err)
 		}
 		defer res.Body.Close()
-
-		err = eg.Wait()
-		if err != nil {
-			return nil, fmt.Errorf("failed in error group: %w", err)
-		}
 
 		digRequestTimeLocker.Lock()
 		digRequestTime[dig.Depth-1] = append(digRequestTime[dig.Depth-1], requestTime)
@@ -115,19 +103,12 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 			return nil, fmt.Errorf("dig 403 error(request:%+v): %+v", *dig, apiErr)
 		}
 		//log.Printf("dig error(request:%+v): %+v", *dig, apiErr)
-		pr, pw = io.Pipe()
-		eg := errgroup.Group{}
-		eg.Go(func() error {
-			defer pr.Close()
-			defer pw.Close()
-			err := json.NewEncoder(pw).Encode(dig)
-			if err != nil {
-				return fmt.Errorf("failed to encord response body: %w", err)
-			}
-
-			return nil
-		})
-		req.Body = pr
+		buf = bytes.Buffer{}
+		err = json.NewEncoder(&buf).Encode(dig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encord response body: %w", err)
+		}
+		req.Body = io.NopCloser(&buf)
 	}
 
 	digMetricsLocker.Lock()

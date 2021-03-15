@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/openapi"
-	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -32,20 +32,13 @@ func Explore(ctx context.Context, area *openapi.Area) (*openapi.Report, error) {
 	sb.WriteString(baseURL)
 	sb.WriteString("/explore")
 
-	pr, pw := io.Pipe()
-	eg := errgroup.Group{}
-	eg.Go(func() error {
-		defer pr.Close()
-		defer pw.Close()
-		err := json.NewEncoder(pw).Encode(area)
-		if err != nil {
-			return fmt.Errorf("failed to encord response body: %w", err)
-		}
+	buf := bytes.Buffer{}
+	err := json.NewEncoder(&buf).Encode(area)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encord response body: %w", err)
+	}
 
-		return nil
-	})
-
-	req, err := http.NewRequestWithContext(ctx, "POST", sb.String(), pr)
+	req, err := http.NewRequestWithContext(ctx, "POST", sb.String(), &buf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
@@ -81,19 +74,12 @@ func Explore(ctx context.Context, area *openapi.Area) (*openapi.Report, error) {
 		err = json.NewDecoder(res.Body).Decode(&apiErr)
 		log.Printf("explore error(%d):%+v\n", res.Status, apiErr)*/
 
-		pr, pw = io.Pipe()
-		eg := errgroup.Group{}
-		eg.Go(func() error {
-			defer pr.Close()
-			defer pw.Close()
-			err := json.NewEncoder(pw).Encode(area)
-			if err != nil {
-				return fmt.Errorf("failed to encord response body: %w", err)
-			}
-
-			return nil
-		})
-		req.Body = pr
+		buf = bytes.Buffer{}
+		err = json.NewEncoder(&buf).Encode(area)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encord response body: %w", err)
+		}
+		req.Body = io.NopCloser(&buf)
 	}
 
 	exploreMetricsLocker.Lock()

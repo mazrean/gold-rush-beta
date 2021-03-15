@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	"github.com/mazrean/gold-rush-beta/openapi"
-	"golang.org/x/sync/errgroup"
 )
 
 type License struct {
@@ -51,20 +51,13 @@ func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) 
 	sb.WriteString(baseURL)
 	sb.WriteString("/dig")
 
-	pr, pw := io.Pipe()
-	eg := errgroup.Group{}
-	eg.Go(func() error {
-		defer pr.Close()
-		defer pw.Close()
-		err := json.NewEncoder(pw).Encode(coins)
-		if err != nil {
-			return fmt.Errorf("failed to encord response body: %w", err)
-		}
+	buf := bytes.Buffer{}
+	err := json.NewEncoder(&buf).Encode(coins)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encord response body: %w", err)
+	}
 
-		return nil
-	})
-
-	req, err := http.NewRequestWithContext(ctx, "POST", sb.String(), pr)
+	req, err := http.NewRequestWithContext(ctx, "POST", sb.String(), &buf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
@@ -101,20 +94,13 @@ func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) 
 			return nil, fmt.Errorf("failed to decord response body: %w", err)
 		}*/
 
-		pr, pw = io.Pipe()
-		eg := errgroup.Group{}
-		eg.Go(func() error {
-			defer pr.Close()
-			defer pw.Close()
-			err := json.NewEncoder(pw).Encode(coins)
-			if err != nil {
-				return fmt.Errorf("failed to encord response body: %w", err)
-			}
+		buf = bytes.Buffer{}
+		err = json.NewEncoder(&buf).Encode(coins)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encord response body: %w", err)
+		}
 
-			return nil
-		})
-
-		req.Body = pr
+		req.Body = io.NopCloser(&buf)
 	}
 
 	for i := 0; i < int(license.DigAllowed); i++ {
