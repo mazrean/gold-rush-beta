@@ -224,15 +224,16 @@ func schedule(ctx context.Context) {
 	var k int32
 	for k = 0; k < exploreSubWorkerNum; k++ {
 		go func(k int32) {
-			for i := 3500 * k / exploreSubWorkerNum; i < 3500*(k+1)/exploreSubWorkerNum; i += 1 {
+			maxX := 3500 * (k + 1) / exploreSubWorkerNum
+			for i := 3500 * k / exploreSubWorkerNum; i < maxX; i++ {
 				var j int32
 				for j = 0; j < 3500; j += size {
 					var sizeX int32 = 1
 					sizeY := size
-					if i+size > 3500 {
-						sizeX = 3500 - i
+					if i+sizeX > maxX {
+						sizeX = maxX - i
 					}
-					if j+size > 3500 {
+					if j+sizeY > 3500 {
 						sizeY = 3500 - j
 					}
 					exploreScheduler.Push(&exploreScheduler.Area{
@@ -348,46 +349,42 @@ func explore(ctx context.Context, arg *openapi.Area) {
 			} else if report.Amount > 0 {
 				if *report.Area.SizeX != 1 {
 					sizeX1 := *report.Area.SizeX / 2
-					sizeY1 := *report.Area.SizeY
 					insertExplore(&exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
 							PosY:  report.Area.PosY,
 							SizeX: &sizeX1,
-							SizeY: &sizeY1,
+							SizeY: report.Area.SizeY,
 						},
 						Amount: float64(report.Amount) * float64(sizeX1) / float64(*report.Area.SizeX),
 					})
 					sizeX2 := *report.Area.SizeX - sizeX1
-					sizeY2 := *report.Area.SizeY
 					insertExplore(&exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX + sizeX1,
 							PosY:  report.Area.PosY,
 							SizeX: &sizeX2,
-							SizeY: &sizeY2,
+							SizeY: report.Area.SizeY,
 						},
 						Amount: float64(report.Amount) * float64(sizeX2) / float64(*report.Area.SizeX),
 					})
 				} else {
-					sizeX1 := *report.Area.SizeX
 					sizeY1 := *report.Area.SizeY / 2
 					insertExplore(&exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
 							PosY:  report.Area.PosY,
-							SizeX: &sizeX1,
+							SizeX: report.Area.SizeX,
 							SizeY: &sizeY1,
 						},
 						Amount: float64(report.Amount) * float64(sizeY1) / float64(*report.Area.SizeY),
 					})
-					sizeX2 := *report.Area.SizeX
 					sizeY2 := *report.Area.SizeY - sizeY1
 					insertExplore(&exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
 							PosY:  report.Area.PosY + sizeY2,
-							SizeX: &sizeX2,
+							SizeX: report.Area.SizeX,
 							SizeY: &sizeY2,
 						},
 						Amount: float64(report.Amount) * float64(sizeY2) / float64(*report.Area.SizeY),
