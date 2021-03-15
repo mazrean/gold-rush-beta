@@ -54,6 +54,7 @@ func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) 
 	pr, pw := io.Pipe()
 	eg := errgroup.Group{}
 	eg.Go(func() error {
+		defer pr.Close()
 		defer pw.Close()
 		err := json.NewEncoder(pw).Encode(coins)
 		if err != nil {
@@ -74,7 +75,6 @@ func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) 
 		//res     *http.Response
 	)
 	for i = 0; ; i++ {
-		pr.Close()
 		startTime := time.Now()
 		res, err := client.Do(req)
 		requestTime := time.Since(startTime).Milliseconds()
@@ -104,6 +104,7 @@ func IssueLicense(ctx context.Context, coins []int32) (*openapi.License, error) 
 		pr, pw = io.Pipe()
 		eg := errgroup.Group{}
 		eg.Go(func() error {
+			defer pr.Close()
 			defer pw.Close()
 			err := json.NewEncoder(pw).Encode(coins)
 			if err != nil {

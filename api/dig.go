@@ -53,6 +53,7 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 	pr, pw := io.Pipe()
 	eg := errgroup.Group{}
 	eg.Go(func() error {
+		defer pr.Close()
 		defer pw.Close()
 		err := json.NewEncoder(pw).Encode(dig)
 		if err != nil {
@@ -72,7 +73,6 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 		treasures []string
 	)
 	for i = 0; ; i++ {
-		pr.Close()
 		startTime := time.Now()
 		res, err := client.Do(req)
 		requestTime := time.Since(startTime).Milliseconds()
@@ -118,6 +118,7 @@ func Dig(ctx context.Context, dig *openapi.Dig) ([]string, error) {
 		pr, pw = io.Pipe()
 		eg := errgroup.Group{}
 		eg.Go(func() error {
+			defer pr.Close()
 			defer pw.Close()
 			err := json.NewEncoder(pw).Encode(dig)
 			if err != nil {
