@@ -386,7 +386,7 @@ func explore(ctx context.Context, arg *openapi.Area) {
 					newArea2 := exploreScheduler.Area{
 						Area: &openapi.Area{
 							PosX:  report.Area.PosX,
-							PosY:  report.Area.PosY + sizeY2,
+							PosY:  report.Area.PosY + sizeY1,
 							SizeX: report.Area.SizeX,
 							SizeY: &sizeY2,
 						},
